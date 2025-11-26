@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import jwt, {JwtPayload} from "jsonwebtoken";
 import {prisma, connectDB} from "./db/prisma.js"
 import { SignupSchema } from "./schemas/SignupSchema.js";
-import z from "zod";
+import z, { success } from "zod";
 
 dotenv.config();
 const app = express();
@@ -164,22 +164,114 @@ async function main(){
 
 //main()
 
-app.post('/zod-testing', async (req: Request, res: Response) => {
-  try{
-    //Validates request body
-    const userData = SignupSchema.parse(req.body);
+  app.post('/zod-testing', async (req: Request, res: Response) => {
+    try{
+      //Validates request body
+      const userData = SignupSchema.parse(req.body);
 
-    //userData is now 100% safe
-    const user = await prisma.user.create({data: userData});
+      //userData is now 100% safe
+      const user = await prisma.user.create({data: userData});
 
-    res.status(201).json({
-      success: true,
-      user
+      res.status(201).json({
+        success: true,
+        user
+      });
+
+    } catch(error){
+        console.error(error)
+    }
+  });
+
+//signup route
+app.post('/signup', async (req, res) => {
+
+  try {
+    let {name, password, email} = req.body;
+
+    //if the user has not sent any data
+    if(!name || !email || !password){
+      return res.send(400).json({
+        success: false,
+        message: "Missing fields"
+      });
+    }
+
+    //check if the user already exist in db thru email 
+    const existingUser = await prisma.user.findUnique({
+      where: {email}
     });
 
+    if(existingUser){
+      return res.status(400).json({
+        success: false,
+        message: "User already exist.Please login"
+      })
+    }
+
+    //Create a new user
+    const user = await prisma.user.create({
+      data: {
+        name, 
+        email, 
+        password
+      }
+    })
+  
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        }
+    })
   } catch(error){
-      console.error(error)
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error"
+      });
   }
+});
+
+
+//login route
+app.post('/login', async (req, res) => {
+  try{
+      const {email, password} = req.body;
+
+  if(!email || !password){
+    return res.status(400).json({
+      success: false,
+      messsage: "Email and password field should be filled"
+    })
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: {email}
+  });
+
+  //compare the password
+  if(existingUser?.password == password){
+    res.status(200).json({
+      success: true,
+      message: "Successfull Logged in"
+    })
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: "wrong password"
+    });
+  }
+  } catch(error){
+     console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error"
+      });
+  }
+  
 });
 
 app.listen(process.env.PORT, () => {
