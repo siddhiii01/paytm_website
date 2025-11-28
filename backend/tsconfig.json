@@ -43,6 +43,16 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "baseUrl": "./src",  // For aliases
+    "paths": {
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@route/*": ["routes/*"],
+      "@schemas/*": ["schemas/*"],
+      "@utils/*":["utils/*"],
+      "@validations/*":["validations/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

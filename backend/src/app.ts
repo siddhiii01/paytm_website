@@ -7,8 +7,10 @@ import { SignupSchema } from "./schemas/SignupSchema.js";
 import z, { success } from "zod";
 import bcrypt from "bcrypt"
 import e from "cors";
+import { appConfig } from "@config/app.config.js";
+import { authConfig } from "@config/auth.config.js";
 
-dotenv.config();
+
 const app = express();
 const SALT_ROUNDS: number = 10; //tells how expensive hashing algorith shud be
 
@@ -296,7 +298,11 @@ app.post('/login', async (req, res) => {
   
 });
 
-app.listen(process.env.PORT, () => {
-    console.log("Server is running")
+console.log("App Config: ", appConfig)
+console.log("Auth Config: ", authConfig)
+
+app.listen(appConfig.port, ()=>{
+  console.log("Server is running")
 });
+
 
