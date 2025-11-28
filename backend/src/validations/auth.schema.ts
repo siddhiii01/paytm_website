@@ -7,7 +7,7 @@ const login = z.object({
 });
 
 const register = z.object({
-    username: z.string(),
+    name: z.string(),
     email: z.string().trim().min(1, "Email is required").email({ message: "Invalid email format" }),
     password: z.string()
 });

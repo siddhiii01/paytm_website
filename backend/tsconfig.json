@@ -51,7 +51,8 @@
       "@route/*": ["routes/*"],
       "@schemas/*": ["schemas/*"],
       "@utils/*":["utils/*"],
-      "@validations/*":["validations/*"]
+      "@validations/*":["validations/*"],
+      "@db/*": ["db/*"]
     }
   },
   "include": ["src/**/*"],

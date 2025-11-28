@@ -1,0 +1,133 @@
+import { authSchema } from "@validations/auth.schema.js";
+import { z} from "zod";
+import type {Request, Response} from "express";
+import {prisma} from "@db/prisma.js"
+import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
+import { authConfig } from "@config/auth.config.js";
+import {appConfig} from "@config/app.config.js"
+
+export class AuthController {
+    static login = async (req: Request, res: Response) => {
+        const {email, password} = req.body as z.infer<typeof authSchema.login>;
+        try{
+            const existingUser = await prisma.user.findUnique({where: {email}});
+
+            // Check if user exists
+            if (!existingUser) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid credentials"
+                });
+            } 
+
+            //compare the given password with the hashed password
+            const isPasswordValid: any = await bcrypt.compare(password, existingUser.password)
+
+            if(isPasswordValid){
+                console.log("true")
+            }else {
+                // Use same message as above for security
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid credentials"
+                });
+            }
+
+            //creating short-lived token for API calls
+            const accessToken = jwt.sign(
+                {userId: existingUser.id}, //payload
+                authConfig.secret,      //secret key
+                { expiresIn: authConfig.expiresIn as any} //options
+            );
+            console.log("Access Token: ", accessToken);
+
+            //creating refresh token -> for token renewal
+            const refreshToken = jwt.sign(
+                {userId: existingUser.id},
+                authConfig.refreshSecret,
+                {expiresIn: authConfig.refreshExpiresIn as any}
+            );
+
+            console.log("Refresh Token: ", refreshToken);
+
+             await prisma.user.update({ where: { email }, data: { refreshToken } });
+
+
+            //setting accessToken & refresh Token  as cookie 
+            res.cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: appConfig.nodeEnv === "production",
+                maxAge: 15 * 60 * 1000,
+                sameSite: "strict"
+            });
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: appConfig.nodeEnv === "production",
+                maxAge: 24 * 60 * 60 * 1000,
+                sameSite: "strict"
+            });
+
+
+            res.json({
+                id: existingUser.id,
+                message: "SUccessful",
+                accessToken,
+                refreshToken
+            })
+
+        } catch(error){
+            console.error("Login error: ", error);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+    }
+
+    static register = async (req: Request, res: Response) => {
+         let {name, password, email} = req.body as z.infer<typeof  authSchema.register>;
+        try {
+           
+            //check if the user already exist in db thru email 
+            const existingUser = await prisma.user.findUnique({ where: {email} });
+
+            if(existingUser){
+                return res.status(400).json({
+                    success: false,
+                    message: "User already exist. Please login"
+                })
+            }
+            
+            //hash the password before storing in database
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            //Create a new user
+            const user = await prisma.user.create({
+                data: {
+                    name, 
+                    email, 
+                    password: hashedPassword // Store hashed password
+                }
+            })
+        
+            res.status(201).json({
+                success: true,
+                message: "User created successfully",
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+                    }
+                })
+        } catch(error){
+            console.error(error);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+    }
+
+    
+}
