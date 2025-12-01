@@ -14,6 +14,7 @@ import { AuthController } from "@controllers/auth.controllers.js";
 import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import cookieParser from "cookie-parser";
 import {initiateOnRampSchema} from "@validations/onramp.schema.js"
+import { initiateOnRampTx } from "@controllers/onramp.controllers.js";
 
 
 const app = express();
@@ -240,21 +241,21 @@ app.get("/auth", AuthMiddleware.authenticateUser, (req, res) => {
 
 
 //endpoint for user to start adding money
-app.post("/onramp", (req: Request, res: Response) => {
+app.post("/onramp",AuthMiddleware.authenticateUser, initiateOnRampTx, (req: Request, res: Response) => {
  
-  const result = initiateOnRampSchema.safeParse(req.body);
-  if(!result.success){
-    return res.status(400).json({
-      error: result.error.flatten()
-    })
-  }
+  // const result = initiateOnRampSchema.safeParse(req.body);
+  // if(!result.success){
+  //   return res.status(400).json({
+  //     error: result.error.flatten()
+  //   })
+  // }
 
-  const data = result.data; // validated & typed
+  // const data = result.data; // validated & typed
 
-  res.json({
-    message: "Onramp request received",
-    data
-  });
+  // res.json({
+  //   message: "Onramp request received",
+  //   data
+  // });
   // //this is a route that accepts amt and payment details
   // const {amount, provider, userId, } = (req ).body;
 
