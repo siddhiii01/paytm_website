@@ -13,6 +13,7 @@ import { successResponse, errorResponse, serverResponse } from "@utils/response.
 import { AuthController } from "@controllers/auth.controllers.js";
 import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import cookieParser from "cookie-parser";
+import {initiateOnRampSchema} from "@validations/onramp.schema.js"
 
 
 const app = express();
@@ -28,13 +29,13 @@ const publicKey = process.env.JWT_PUBLIC_KEY as string;
 app.use(express.json()); 
 
 //Logging Middleware
-app.use((req: Request,res:Response, next: NextFunction) => {
-    console.log("Incoming req: ");
-    console.log(`req.headers: ${JSON.stringify(req.headers)}`)
-    console.log(`req.body: ${JSON.stringify(req.body)}`);
-    console.log(`req.url: ${req.originalUrl}`);
-    next();
-});
+// app.use((req: Request,res:Response, next: NextFunction) => {
+//     console.log("Incoming req: ");
+//     console.log(`req.headers: ${JSON.stringify(req.headers)}`)
+//     console.log(`req.body: ${JSON.stringify(req.body)}`);
+//     console.log(`req.url: ${req.originalUrl}`);
+//     next();
+// });
 
 app.get('/test', (req: Request, res: Response) => {
   res.send("testing route")
@@ -234,6 +235,37 @@ app.get("/server", (req, res) => {
 app.get("/auth", AuthMiddleware.authenticateUser, (req, res) => {
   console.log("req.userId", (req as any).userId)
 });
+
+
+
+
+//endpoint for user to start adding money
+app.post("/onramp", (req: Request, res: Response) => {
+ 
+  const result = initiateOnRampSchema.safeParse(req.body);
+  if(!result.success){
+    return res.status(400).json({
+      error: result.error.flatten()
+    })
+  }
+
+  const data = result.data; // validated & typed
+
+  res.json({
+    message: "Onramp request received",
+    data
+  });
+  // //this is a route that accepts amt and payment details
+  // const {amount, provider, userId, } = (req ).body;
+
+  // res.json({
+  //   message: "Onramp request received",
+  //   data: { amount, provider, userId }
+  // });
+
+  // console.log(amount, provider, userId, );
+  
+})
 
 
 app.listen(appConfig.port, ()=>{

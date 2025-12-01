@@ -27,19 +27,20 @@ model User {
   balances Balance[]
 }
 
+//User's wallet balance
 model Balance {
   id Int @id @default(autoincrement())
   userId Int @unique
-  amount Int
-  locked Int //locked in pending tx
+  amount Int //Available money
+  locked Int //Money in pending transactions
   user User @relation(fields: [userId], references: [id])
   lastUpdated DateTime @updatedAt
 }
 
+//Tracks each money-adding attempt
 model OnRampTx {
   id Int @id @default(autoincrement())
-  token String @unique //Unique Payment Refrence
-
+  token String @unique // Unique identifier for this transaction (sent to bank)
   //Tx Status
   status OnRampStatus @default(Processing)
 
@@ -50,7 +51,7 @@ model OnRampTx {
   provider String //"HDFC" "SBI"
 
   //Timeline Details
-  startTime DateTime @default(now())
+  startTime DateTime @default(now()) //When user initiated
 
   // Relationship
   userId Int
