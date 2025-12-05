@@ -5,9 +5,16 @@ import { appConfig } from "@config/app.config.js";
 import { AuthController } from "@controllers/auth.controllers.js";
 import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import cookieParser from "cookie-parser";
+import cors from "cors"
 
 const app = express();
 app.use(cookieParser());
+
+app.use(cors()); // Allows all origins
+
+// app.use(cors({
+//   origin: 'http://localhost:5173'  // Vite default
+// }))
 
 //every incoming requesting that browser is sending is goes through this middleware before acutally hitting our route
 //This looks at header: Content-Type: application/json
