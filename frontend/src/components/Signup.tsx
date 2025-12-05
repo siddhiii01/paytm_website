@@ -1,40 +1,74 @@
-import { useState } from "react";
+import React, {useState} from "react";
+import type { SignupCredentials } from "../types/auth.types";
+
+
+
+
 export const Signup: React.FC = () => {
-    const [formData, setFormData] = useState();
+    const [formData, setFormData] = useState<SignupCredentials>({
+        name: '',
+        email: '',
+        password: '',
+        number : ''
+    }) //adding states for the input fields
+   
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = e.target;
 
-    const handleFormChange = (e:any) =>{
-        // console.log(e.target.name)
-        // console.log(e.target.value)
-        setFormData(e.target.value);
-        
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }))
+    };
+
+    const handleSubmit = (e:React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault() //stops refreshing
+        setFormData({name: '', number:'', email: '', password: ''});
     }
-    console.log(`Form Data: ${formData}`)
 
-  return (
-    <>
-    <label htmlFor="name">Enter Name: </label>
-    <input 
-        type="text"
-        name="name"
-        id="name"
-        onChange={handleFormChange}
-    />
+    return (
+        <>
+        <form onSubmit={handleSubmit}>
+            <label htmlFor="name">Name:</label>
+            <input 
+                type="text"
+                id="name"
+                value={formData.name} // Ties the input to state
+                name="name"
+                placeholder="Enter your full name"
+                onChange={handleChange} // Handle changes
+            />
 
-    <label htmlFor="email">Enter Email: </label>
-    <input 
-        type="text"
-        name="email"
-        id="email"
-    />
+            <label htmlFor="email">Email: </label>
+            <input 
+                type="email"
+                id="email"
+                value={formData.email}
+                name="email"
+                placeholder="example@domain.com"
+                onChange={handleChange}
+            />
 
-    <label htmlFor="password">Enter Password: </label>
-    <input 
-        type="password"
-        name="password"
-        id="password"
-    />
+            <label htmlFor="number">Phone Number:</label>
+            <input 
+                type="text"
+                id="number"
+                value={formData.number}
+                name="number"
+                placeholder="+1 (555) 123-4567"
+                onChange={handleChange}
+            />
 
-    <button>Sign Up</button>
-    </>
-  );
-};
+            <label htmlFor="password">Password:</label>
+            <input 
+                type="password"
+                name="password"
+                id="password"
+                value={formData.password}
+                onChange={handleChange}
+            />
+            <button type="submit">Signup</button>
+        </form>
+        </>
+    );
+}
