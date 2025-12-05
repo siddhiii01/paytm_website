@@ -52,6 +52,7 @@ app.get("/auth", AuthMiddleware.authenticateUser, (req, res) => {
   console.log("req.userId", (req as any).userId)
 });
 
+
 app.listen(appConfig.port, ()=>{
   console.log("Server is running")
 });
