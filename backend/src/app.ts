@@ -85,7 +85,7 @@ app.post('/add-money',AuthMiddleware.authenticateUser, AuthController.refreshTok
       redirectUrl: "http://localhost:3000/onramp/webhook" //Bank needs to know where to send the webhook later.
     });
 
-    console.log("bankResponse", bankResponse)
+    //console.log("bankResponse", bankResponse)
     const {payment_token, paymentUrl} = bankResponse.data; //Bank returns a unique payment_token + payment URL
 
     // 2. Save to your DB
@@ -131,6 +131,45 @@ app.post('/add-money',AuthMiddleware.authenticateUser, AuthController.refreshTok
 
   //now here we have to call dummy bank api -> but how ? through axios? res.redirect?
 });
+
+app.post('/dbupdate', async (req, res) => {
+  const {userId, token, amount} = req.body.paymentInformation
+  console.log("dbupdate", userId, token, amount)
+  try {
+        await prisma.$transaction([
+            prisma.balance.updateMany({
+                where: {
+                    userId: Number(userId)
+                },
+                data: {
+                    amount: {
+                        // You can also get this from your DB
+                        increment: Number(amount)
+                    }
+                }
+            }),
+            prisma.onRampTx.updateMany({
+                where: {
+                    token: token
+                }, 
+                data: {
+                    status: "Success",
+                }
+            })
+        ]);
+
+        res.json({
+            message: "Captured"
+        })
+    } catch(e) {
+        console.error(e);
+        res.status(411).json({
+            message: "Error while processing webhook"
+        })
+    }
+  //res.send("This was from webhook hablder to paytm")
+  // res.json({message: "This was from webhook hablder to paytm"})
+})
 
 
 app.listen(appConfig.port, ()=>{

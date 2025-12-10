@@ -86,10 +86,11 @@ app.post('/success/:token', async (req, res) => {
     //send webhook to paytm
     const web= await axios.post('http://localhost:3002/hdfcWebhook', {
         token,
-        userId: payment.userId
+        userId: payment.userId,
+        amount: payment.amount
         
     });
-    
+    // res.json({ message: "DUmmy Bank server to Webhook done"})
     
     // res.send(`
     //     <h1>Payment Approved!</h1>

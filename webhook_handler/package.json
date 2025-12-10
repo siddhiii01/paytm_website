@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "npm run build && nodemon dist/index.js"
-    
   },
   "keywords": [],
   "author": "",
@@ -14,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@types/express": "^5.0.6",
+    "axios": "^1.13.2",
     "express": "^5.2.1",
     "typescript": "^5.9.3"
   }
