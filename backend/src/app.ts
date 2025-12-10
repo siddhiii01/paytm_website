@@ -62,7 +62,7 @@ app.get("/auth", AuthMiddleware.authenticateUser, (req, res) => {
 });
 
 //add money to wallet -> recieve a request from frontend
-app.post('/add-money',AuthMiddleware.authenticateUser,AuthController.refreshToken, async (req: Request, res:Response) => {
+app.post('/add-money',AuthMiddleware.authenticateUser, AuthController.refreshToken, async (req: Request, res:Response) => {
   const {amount, provider = "HDFC"} = req.body;
 
   if(!amount || amount <=0){
@@ -85,6 +85,7 @@ app.post('/add-money',AuthMiddleware.authenticateUser,AuthController.refreshToke
       redirectUrl: "http://localhost:3000/onramp/webhook" //Bank needs to know where to send the webhook later.
     });
 
+    console.log("bankResponse", bankResponse)
     const {payment_token, paymentUrl} = bankResponse.data; //Bank returns a unique payment_token + payment URL
 
     // 2. Save to your DB

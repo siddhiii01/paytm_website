@@ -1,5 +1,6 @@
 import express from "express";
 import crypto from "crypto";
+import axios from "axios";
 
 const app = express();
 app.use(express.json());
@@ -33,6 +34,8 @@ app.post('/create-payment',(req, res) => {
 
     console.log("Current payments:", Array.from(payments.entries()))
     console.log('Bank: Created payment', { payment_token, amount, redirectUrl });
+
+    
     
     //sending back to paytm server 
     res.json({
@@ -67,24 +70,34 @@ app.get("/pay/:token", (req,res) => {
     </form>`)
 });
 
-app.post('/success/:token', (req, res) => {
+app.post('/success/:token', async (req, res) => {
     const {token} = req.params;
     const payment = payments.get(token);
+    console.log("payment", payment)
     if(!payment){
-        res.status(404).json({message: "Payment not found"})
+        return res.status(404).json({message: "Payment not found"})
     }
 
     //update the payment to Suceess
     payment.status = "Success";
     payments.set(token, payment);
+    console.log("webhook req")
 
     //send webhook to paytm
+    const web= await axios.post('http://localhost:3002/hdfcWebhook', {
+        token,
+        userId: payment.userId
+        
+    });
     
-    res.send(`
-        <h1>Payment Approved!</h1>
-        <p>₹${payment.amount} has been debited successfully.</p>
-        <p>You can close this window.</p>
-  `)
+    
+    // res.send(`
+    //     <h1>Payment Approved!</h1>
+    //     <p>₹${payment.amount} has been debited successfully.</p>
+    //     <p>You can close this window.</p>
+    // `)
+    
+    
 });
 
 app.post('/failure/:token', (req, res) => {
