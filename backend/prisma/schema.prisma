@@ -67,5 +67,6 @@ enum OnRampStatus {
 }
 
 // Run migration
-// npx prisma migrate dev --name init
+// npx prisma migrate dev --name init -> don't run this in prisma folder
 // npx prisma studio
+//npx prisma migrate reset

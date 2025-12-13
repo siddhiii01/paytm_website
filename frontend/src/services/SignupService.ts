@@ -10,18 +10,17 @@ const SignupRoute = async (formData: SignupCredentials) => {
     if(!validation.success){
         console.error("Frontend validation failed:", validation.error.flatten());
         return {
-        success: false,
-        errors: validation.error.flatten()
+            success: false,
+            errors: validation.error.flatten()
         };
     }
+
     try{
             const response = await axios.post(`${(import.meta as any).env.VITE_API_URL}/signup`, formData);
             console.log("Backend Response: ", response.data);
-            
-
         } catch(error: any){
             console.error("Error while sending to backend", error);
         }
 }
 
-export default SignupRoute
+export default SignupRoute;

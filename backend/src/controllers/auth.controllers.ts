@@ -92,20 +92,17 @@ export class AuthController {
          let  validation= authSchema.register.safeParse(req.body);
          
         try {
-
             if (!validation.success) {
                 return res.status(400).json({
-                success: false,
-                message: "Zod validation failed",
-                errors: validation.error.flatten()
-            });
-  }
-
-         const {name, email, password, number} = validation.data;
+                    success: false,
+                    message: "Zod validation failed",
+                    errors: validation.error.flatten()
+                });
+            }
+            const {name, email, password,  number} = validation.data;
            
             //check if the user already exist in db thru email 
             const existingUser = await prisma.user.findUnique({ where: {email} });
-
             if(existingUser){
                 return res.status(400).json({
                     success: false,
@@ -124,8 +121,8 @@ export class AuthController {
                     number,
                     password: hashedPassword // Store hashed password
                 }
-            })
-        
+            });
+            //sending response to frontend
             res.status(201).json({
                 success: true,
                 message: "User created successfully",
