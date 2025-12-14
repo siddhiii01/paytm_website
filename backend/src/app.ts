@@ -41,6 +41,12 @@ async function testConnection(){
 }
 testConnection();
 
+//home route
+app.post('/', (req, res) => {
+  const username = req.body
+  res.send(`${username}`)
+})
+
 //signup route
 app.post('/signup', AuthController.register);
 
