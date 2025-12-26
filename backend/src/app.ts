@@ -3,17 +3,20 @@ import type {Request, Response, NextFunction} from "express";
 import {prisma, connectDB} from "./db/prisma.js"
 import { appConfig } from "@config/app.config.js";
 import { AuthController } from "@controllers/auth.controllers.js";
-import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors"
 import axios from "axios";
 import { log } from "console";
+import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 
 const app = express();
+
+
+app.use(cors({
+  origin: "http://localhost:5173",  // Your frontend URL
+  credentials: true,                // ← THIS IS CRITICAL
+}))
 app.use(cookieParser());
-
-app.use(cors()); // Allows all origins
-
 // app.use(cors({
 //   origin: 'http://localhost:5173'  // Vite default
 // }))
@@ -54,18 +57,26 @@ app.post('/signup', AuthController.register);
 app.post('/login',AuthController.login);
 
 //refresh token
-app.post('/refreshToken', AuthMiddleware.authenticateUser, AuthController.refreshToken, (req,res) => {
-  res.json({message:'refresh token page '})
-});
+app.post('/refresh',AuthController.refreshToken);
 
 //logout page
 app.get('/logout',AuthMiddleware.authenticateUser, AuthController.logout, (req, res) => {
   console.log((req as any).user?.userId)
 });
 
-app.get("/auth", AuthMiddleware.authenticateUser, (req, res) => {
-  console.log("req.userId", (req as any).userId)
+
+
+// Simple protected endpoint
+app.get('/protected',AuthMiddleware.authenticateUser , (req: Request, res: Response) => {
+  const userId = (req as any).userId; // From middleware
+  res.json({
+    success: true,
+    message: 'This is a protected route!',
+    userId: userId,
+    timestamp: new Date().toISOString(),
+  });
 });
+
 
 //add money to wallet -> recieve a request from frontend
 

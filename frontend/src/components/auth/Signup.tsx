@@ -3,6 +3,7 @@ import axios from "axios";
 import {registerSchema} from "shared_schemas";
 import type {  SignupCredentials } from "shared_schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "../../utils/axios";
 
 
 export const Signup = () => {
@@ -24,8 +25,8 @@ export const Signup = () => {
         try{
             //HTTP POST request
             //await pauses until server responds
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/signup`,
+            const response = await api.post(
+                `/signup`,
                 data, //request body -> Axios Json payload sending back to the backend -> it is an object
                 //data is not JS object it is a Json string 
                 //{withCredentials: true} // VERY IMPORTANT! Allows cookies to be sent/received

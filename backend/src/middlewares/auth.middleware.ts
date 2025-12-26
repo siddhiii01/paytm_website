@@ -9,13 +9,15 @@ export interface DecodedToken {
 
 export class AuthMiddleware {
     static authenticateUser =  (req: Request, res: Response, next: NextFunction) => {
+        console.log('Refresh endpoint called');
+  console.log('Received refresh token:', req.cookies.refreshToken ? 'YES' : 'NO');
         //now server has sended the cookies in res.cookies in login route
         //from client to access the cookie uses req.cookies
         const token = req.cookies.accessToken; //getting token from user 
         console.log("Access token from req.cookies.accessToken: ", token)
 
         if(!token){
-             return res.json({
+             return res.status(401).json({
                 message: "User is not authorised"
             })
         }
@@ -31,6 +33,8 @@ export class AuthMiddleware {
             next();
         } catch(error){
              console.error("Authentication failed:", error);  
+             // Token expired or invalid → frontend will auto-refresh
+            return res.status(401).json({ message: "Unauthorized" });
              
         }
     }

@@ -110,7 +110,7 @@ export class AuthController {
             
             //Generate tokens for auto-login
             const tokens = await generateToken(newUser, res)
-            console.log("Successful : ", tokens, newUser )
+            console.log("Successful Signup : ", tokens, newUser )
             return res.status(201).json({
                 success: true,
                 message: "User created successfully",
@@ -152,54 +152,56 @@ export class AuthController {
     }
     
     //acess token expires fast and refresh token last long -> from this function we will allow or not allow user to get new access token
-    static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-        try {//getting the user from req -> who the user is? -> this is set by authmiddleware
-            const userId = (req as any).userId;
-            //getting refresh token from the from the cookies
+    static refreshToken = async (req: Request, res: Response) => {
+        try {
+
+            //browser automatically sends cookies
             const refreshToken = req.cookies.refreshToken;
-
-            //if anyone of the missing user is not authorised
-            if(!userId || !refreshToken){
-                return res.json({
-                    message: "U are not authorised"
+            if(!refreshToken){
+                return res.status(401).json({
+                    message: "No refresh token provided"
                 })
             }
-
-            //now since userId -> is the has the same value from databse id key -> what id if someone tries to manually set userId
-            //so check whether that use is in the db
-            const user = await prisma.user.findUnique({where : {id: userId}});
-            if(!user || !user?.refreshToken){
-                res.json({
-                    message: "User doesn't exist in db or user dosen't have refreshToken"
-                });
+            //verfiying refresh token
+            let decoded: any;
+            try{
+                decoded = jwt.verify(refreshToken, authConfig.refreshSecret)
+            } catch(error){
+                return res.status(403).json({ message: "Invalid or expired refresh token" });
             }
 
-            if(refreshToken !== user?.refreshToken){
-                return res.json({
-                    message: "Token mistmatch"
-                })
+            const userId = decoded.userId;
+            //checking if the user exist and refersh token matches
+            const user = await prisma.user.findUnique({
+                where: { id: userId}
+            });
+            if(!user || user.refreshToken != refreshToken){
+                //token mistmatch
+                res.clearCookie("refreshToken");
+                res.clearCookie("accessToken");
+                return res.status(403).json({ message: "Invalid refresh token" });
             }
 
-            //generate new access token
+            //generate new Access Token
             const newAccessToken = jwt.sign(
                 { userId },
                 authConfig.secret,
-                { expiresIn: authConfig.expiresIn as any}
+                { expiresIn: authConfig.expiresIn as any }
             );
 
-            
+            //setting new access token cookie
             res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
                 secure: appConfig.nodeEnv === "production",
-                maxAge: 15 * 60 * 1000,
                 sameSite: "strict",
+                maxAge: 15 * 60 * 1000,
+            });
 
-            })
-
-            //return res.json({ message: "Access token refreshed" });
-            next()
+            return res.status(200).json({ message: "Token refreshed" });
+        
         } catch(error){
-            return res.status(500).json({ message: "Refresh failed" });
+            console.error("Refresh error:", error);
+            return res.status(500).json({ message: "Internal server error" });
         }
     }
 

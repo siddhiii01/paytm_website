@@ -2,6 +2,7 @@ import {useForm} from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { loginSchema, type LoginCredentials } from "shared_schemas";
+import { api } from "../../utils/axios";
 
 export const Login = () => {
     const {
@@ -13,7 +14,7 @@ export const Login = () => {
     const onSubmit = async (data: LoginCredentials) => {
         try{
             console.log("Data: ", data)
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, data);
+            const response = await api.post(`/login`, data);
             console.log("Login successful:", response.data);
 
         } catch(error){
@@ -41,7 +42,7 @@ export const Login = () => {
         </button>
 
         <p>
-            Don't have an account? <a href="/signup">Sign up</a>
+           New to Paytm? <a href="/signup">Create an Account</a>
         </p>
        </form> 
     )
