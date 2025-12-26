@@ -1,4 +1,4 @@
-import { registerSchema } from "shared_schemas";
+import { registerSchema, loginSchema } from "shared_schemas";
 import type {NextFunction, Request, Response} from "express";
 import {prisma} from "@db/prisma.js"
 import bcrypt from 'bcrypt';
@@ -6,17 +6,34 @@ import jwt from "jsonwebtoken";
 import { authConfig } from "@config/auth.config.js";
 import {appConfig} from "@config/app.config.js"
 import { generateToken } from "@utils/jwtToken.js";
-import z from "zod";
+
 
 export class AuthController {
     static login = async (req: Request, res: Response) => {
-        const {email, password} = req.body as z.infer<typeof authSchema.login>;
+        const validation = loginSchema.safeParse(req.body);
+        if(!validation.success){
+            return res.status(400).json({
+                success: false,
+                message: "validation failed",
+                errors: validation.error.flatten()
+            })
+        }
+
+        const {email, password} = validation.data;
 
         try{
-            const existingUser = await prisma.user.findUnique({where: {email}});
-
-            // Check if user exists
-            if (!existingUser) {
+            //find user from database
+            const user = await prisma.user.findUnique({
+                where: {email},
+                select: {
+                    id: true,
+                    email: true,
+                    phoneNumber: true,
+                    password: true,
+                    name: true
+                }
+            });
+            if (!user) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid credentials"
@@ -24,62 +41,27 @@ export class AuthController {
             } 
 
             //compare the given password with the hashed password
-            const isPasswordValid: any = await bcrypt.compare(password, existingUser.password)
-
-            if(isPasswordValid){
-                console.log("true")
-            }else {
-                // Use same message as above for security
+            const isPasswordValid: any = await bcrypt.compare(password, user.password)
+            if(!isPasswordValid){
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid credentials"
+                    message: "Invalid credentials",
                 });
             }
 
-            //creating short-lived token for API calls
-            const accessToken = jwt.sign(
-                {userId: existingUser.id}, //payload
-                authConfig.secret,      //secret key
-                { expiresIn: authConfig.expiresIn as any} //options
-            );
-            
-
-            //creating refresh token -> for token renewal
-            const refreshToken = jwt.sign(
-                {userId: existingUser.id},
-                authConfig.refreshSecret,
-                {expiresIn: authConfig.refreshExpiresIn as any}
-            );
-
-            console.log("Refresh Token: ", refreshToken);
-
-             await prisma.user.update({ where: { email }, data: { refreshToken } });
-
-
-            //setting accessToken & refresh Token  as cookie 
-            res.cookie("accessToken", accessToken, {
-                httpOnly: true,
-                secure: appConfig.nodeEnv === "production",
-                maxAge: 15 * 60 * 1000,
-                sameSite: "strict"
+            //Generate tokens 
+            const tokens = await generateToken({ id: user.id }, res);
+           
+            return res.status(200).json({
+                success: true,
+                message: "Login successful",
+                user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                },
             });
-
-            console.log("Access Token: ", accessToken);
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: appConfig.nodeEnv === "production",
-                maxAge: 24 * 60 * 60 * 1000,
-                sameSite: "strict"
-            });
-
-
-            res.json({
-                id: existingUser.id,
-                message: "SUccessful",
-                accessToken,
-                refreshToken
-            })
-
         } catch(error){
             console.error("Login error: ", error);
             return res.status(500).json({

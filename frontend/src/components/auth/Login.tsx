@@ -1,19 +1,24 @@
 import {useForm} from "react-hook-form"
-import type { LoginCredentials } from "../../types/auth.types";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { loginSchema, type LoginCredentials } from "shared_schemas";
 
 export const Login = () => {
-    const {register, handleSubmit} = useForm<LoginCredentials>();
+    const {
+        register, 
+        handleSubmit,
+        formState: {isSubmitting, errors}
+    } = useForm<LoginCredentials>({resolver: zodResolver(loginSchema)});
 
-    const onSubmit = (data: LoginCredentials) => {
+    const onSubmit = async (data: LoginCredentials) => {
         try{
-            const response = axios.post(`${import.meta.env.VITE_API_URL}/login`, {data});
-            console.log(response)
+            console.log("Data: ", data)
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, data);
+            console.log("Login successful:", response.data);
 
         } catch(error){
-            console.log("error", error)
-        }
-        
+            console.error("Login error:", error);
+        } 
     }
 
     return (
@@ -23,12 +28,21 @@ export const Login = () => {
             placeholder="Enter Email"
             {...register("email")}
         />
+        {errors.email && <p>{errors.email.message}</p>}
+
         <input 
             placeholder="Enter PayX Password"
             {...register("password")}
         />
-        <button>Sign in</button>
+        {errors.password && <p>{errors.password.message}</p>}
 
+        <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in..." : "Sign in"}
+        </button>
+
+        <p>
+            Don't have an account? <a href="/signup">Sign up</a>
+        </p>
        </form> 
     )
 }
