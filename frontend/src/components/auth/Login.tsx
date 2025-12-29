@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { loginSchema, type LoginCredentials } from "shared_schemas";
 import { api } from "../../utils/axios";
+import { Link } from "react-router-dom";
 
 export const Login = () => {
     const {
@@ -42,7 +43,7 @@ export const Login = () => {
         </button>
 
         <p>
-           New to Paytm? <a href="/signup">Create an Account</a>
+           New to Paytm? <Link to="/signup">Create an Account</Link>
         </p>
        </form> 
     )

@@ -1,79 +1,72 @@
 import express from "express";
 import crypto from "crypto";
 import axios from "axios";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(express.json());
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
 const payments = new Map();  // token → payment object
 
-//generating token
+// Create PaymentT
 app.post('/create-payment',(req, res) => {
-    const {amount,  redirectUrl, userId} = req.body; //getting from paytm server
-    
+    //redirctUrl -> is the webhook url where the bank will notify the result of payment to paytm
+    const {amount,  redirectUrl, userId, provider} = req.body; //getting from paytm server
     if(!amount || !redirectUrl){
         return res.status(400).json({error: "amount and redirectUrl required"})
     }
-
-    //creating token
+   // 1. Generate unique token
    const payment_token =crypto.randomBytes(60).toString('hex');
-
-    // Prints random bytes of generated data
     // console.log("The random bytes of data generated is: ", token);
 
-    //now i have to create a payment url 
-    const paymentUrl = `http://localhost:3001/pay/${payment_token}`;
+    // 2. Create the full payment URL (this is where the user will be redirected to approve
+    //here the paymentUrl will first go to paytm then it will send to frontend
+    //and the frontend will try to redirect the browser to that URL.
+    const paymentUrl = `http://localhost:3001/pay/${payment_token}`; //we need to create this here since this is the bank server this will show the Approval Page
 
+    // 3. Store in Map
     payments.set(payment_token, {
         payment_token,
         amount,
         userId,
+        provider,
         status: "pending",
-        redirectUrl
+        redirectUrl //webhook url paytm gave to send notification here
     });
 
     console.log("Current payments:", Array.from(payments.entries()))
     console.log('Bank: Created payment', { payment_token, amount, redirectUrl });
 
-    
-    
-    //sending back to paytm server 
+    //returns back to paytm server 
     res.json({
-        payment_token,
-        paymentUrl,
+        payment_token, //paytm need this to track the token
+        paymentUrl, // paytm will need this to redirect the user to bank approval page
         
     });
-
-    //and send both to the paytm backend -> how should o dp this??
-
 });
 
+//THIS WILL SHOW PAYMENT PAGE WHETER THE PAYMENT HAS TO BE APPROVED OR DECLINED
 app.get("/pay/:token", (req,res) => {
-    const {token} = req.params
+    const {token} = req.params //for extracting token 
     const payment = payments.get(token);
     if(!payment){
         return res.status(404).json({message: "Invalid or expired payment link"})
     }
 
-   res.send(`<h1>HDFC Bank - Confirm Payment</h1>
-    <p>PayTM wants to debit ₹500 from your account</p>
-    <p>Amount: ₹${payment.amount}</p>
-    <p>User ID: ${payment.userId}</p>
-    <br/><br/>
-
-    <form action="/success/${token}" method="POST">
-    <button type="submit">Approve & Pay</button>
-    </form>
-
-    <form action="/failure/${token}" method="POST">
-    <button type="submit">Decline Payment</button>
-    </form>`)
+   res.render('payment', {amount: payment.amount, userId: payment.userId, provider: payment.provider, token, })
 });
 
+//THIS IS FOR APRROVING THE PAYMENT
 app.post('/success/:token', async (req, res) => {
-    const {token} = req.params;
+    const {token} = req.params; //getting token from the url
     const payment = payments.get(token);
-    console.log("payment", payment)
+    //console.log("payment", payment)
     if(!payment){
         return res.status(404).json({message: "Payment not found"})
     }
@@ -84,7 +77,7 @@ app.post('/success/:token', async (req, res) => {
     console.log("webhook req")
 
     //send webhook to paytm
-    const web= await axios.post('http://localhost:3002/hdfcWebhook', {
+    const web = await axios.post('http://localhost:3000/hdfcWebhook', {
         token,
         userId: payment.userId,
         amount: payment.amount
@@ -101,7 +94,8 @@ app.post('/success/:token', async (req, res) => {
     
 });
 
-app.post('/failure/:token', (req, res) => {
+//THIS IS FOR DECLINING THE PAYMENT
+app.post('/failure/:token', async (req, res) => {
     const {token} = req.params;
     const payment = payments.get(token)
     if(!payment){
@@ -112,6 +106,14 @@ app.post('/failure/:token', (req, res) => {
     payment.status="Failed"
     payments.set(token, payment);
 
+    //send webhook to paytm
+    const web= await axios.post('http://localhost:3000/hdfcWebhook', {
+        token,
+        userId: payment.userId,
+        amount: payment.amount
+        
+    });
+
     //call webhook paytm here post req
     res.send(`
     <h1>Payment Declined</h1>
@@ -119,22 +121,6 @@ app.post('/failure/:token', (req, res) => {
     <p>You can close this window.</p>
   `)
 })
-
-// Later we'll add:
-// GET /pay/:token     → show approval page
-// POST /success/:token, /failure/:token → update + call webhook
-
-// You're NOT saving the payment anywhere!
-// This is the biggest issue.
-// When PayTM calls you, you generate token + URL, but you don't remember:
-// amount
-// userId
-// redirectUrl (webhook URL)
-// status
-// → When user later visits /pay/:token, your server will have no idea what payment this is!
-// You're not receiving important data from PayTM
-// PayTM must send: amount, userId (optional), and most importantly redirectUrl (where to notify later)
-// No storage → We need an in-memory store (for now, no DB)
 
 app.listen(3001, () => {
     console.log(`DUMMY BANK SERVER IS LISTENING ON PORT 5000`)

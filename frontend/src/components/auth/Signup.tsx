@@ -4,6 +4,7 @@ import {registerSchema} from "shared_schemas";
 import type {  SignupCredentials } from "shared_schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "../../utils/axios";
+import { Link } from "react-router-dom";
 
 
 export const Signup = () => {
@@ -73,7 +74,7 @@ export const Signup = () => {
             <button disabled={isSubmitting}>{isSubmitting ? "Signing up...": "Continue"}</button>
             <p>
                 Already a user?
-                <a href="/login">Login with your Paytm account</a>
+                <Link to="/login">Login with your Paytm account</Link>
             </p>
         </form>
 

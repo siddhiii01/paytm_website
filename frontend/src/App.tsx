@@ -1,7 +1,7 @@
 import { AddMoneyToWallet } from "./components/AddMoneyToWallet";
 import { Login } from "./components/auth/Login";
 import { Signup } from "./components/auth/Signup";
-import { TestRefresh } from "./components/TestRefresh";
+
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
       <Signup />
       <Login />
       <AddMoneyToWallet />
-      <TestRefresh />
+      
     </>
   )
 }
