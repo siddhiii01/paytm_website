@@ -5,15 +5,16 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Signup } from './components/auth/Signup';
 import { Login } from './components/auth/Login';
 import { AddMoneyToWallet } from './components/AddMoneyToWallet';
+import { P2P } from './components/P2P';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    // element: <Layout />,
     children: [
       {
         path: '/',
-        element: <Home />
+        // element: <Home />
       }
     ]
   },
@@ -30,6 +31,9 @@ const router = createBrowserRouter([
   
     path: '/addtowallet',
     element: <AddMoneyToWallet/>
+  },{
+    path: '/p2ptransfer',
+    element: <P2P/>
   }
 
 ])

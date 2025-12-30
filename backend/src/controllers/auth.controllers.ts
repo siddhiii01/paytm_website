@@ -110,7 +110,7 @@ export class AuthController {
             
             //Generate tokens for auto-login
             const tokens = await generateToken(newUser, res)
-            console.log("Successful Signup : ", tokens, newUser )
+            console.log("Successful Signup : ", tokens, newUser );
             return res.status(201).json({
                 success: true,
                 message: "User created successfully",

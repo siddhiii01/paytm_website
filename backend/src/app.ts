@@ -9,6 +9,7 @@ import axios from "axios";
 import { log } from "console";
 import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import { onramptx } from "@controllers/onramp.controller.js";
+import { p2p } from "@controllers/p2p.controller.js";
 
 const app = express();
 
@@ -139,4 +140,6 @@ app.post('/hdfcWebhook', async (req, res) => {
     console.log("Webhook received:", paymentInformation);
     //res.json({message: "A post request was sended to paytm"})
 })
+
+app.post('/p2ptransfer', p2p.walletTransfer)
 
