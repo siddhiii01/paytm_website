@@ -58,7 +58,7 @@ export const Signup: React.FC = () => {
                 className="absolute w-full h-full bg-cover bg-center"
                 style={{ backgroundImage: "url('/authbackgrounf.png')" }}
             >
-                <div className="flex items-center justify-center relative z-100 pt-15 mb-10">
+                <div className="flex items-center justify-center relative z-100 pt-12Updated mb-10">
                     <form 
                         onSubmit={handleSubmit(onSubmit)}
                         className="bg-white w-full max-w-[420px] rounded-2xl shadow-lg p-6 space-y-1"
@@ -86,8 +86,9 @@ export const Signup: React.FC = () => {
                                         {...register("name")}
                                         className="w-full border-b text-sm border-gray-300 focus:border-blue-500 outline-none py-1"
                                     />
+                                    {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
                                 </div>
-                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+                                
                             </div>  
                         </div>
                         
@@ -102,8 +103,9 @@ export const Signup: React.FC = () => {
                                         {...register("email")}
                                         className="w-full border-b text-sm border-gray-300 focus:border-blue-500 outline-none py-1"
                                     />
+                                    {errors.email && <p className="text-xs text-red-500" >{errors.email.message}</p>}
                                 </div>
-                                {errors.email && <p className="text-xs text-red-500 mt-1" >{errors.email.message}</p>}
+                                
                             </div>
                         </div>  
                         
@@ -118,8 +120,9 @@ export const Signup: React.FC = () => {
                                         {...register("phoneNumber")}
                                         className="w-full border-b text-sm border-gray-300 focus:border-blue-500 outline-none py-1"
                                     />
+                                    {errors.phoneNumber && <p className="text-xs text-red-500" >{errors.phoneNumber.message}</p>}
                                 </div>
-                                {errors.phoneNumber && <p className="text-xs text-red-500 mt-1" >{errors.phoneNumber.message}</p>}
+                                
                             </div>
                         </div>
                         
@@ -135,7 +138,7 @@ export const Signup: React.FC = () => {
                                         {...register("password")}
                                         className="w-full border-b text-sm border-gray-300 focus:border-blue-500 outline-none py-1"
                                     />
-                                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password?.message}</p>}
+                                    {errors.password && <p className="text-xs text-red-500">{errors.password?.message}</p>}
                                 </div>
                             </div>
                         </div>
