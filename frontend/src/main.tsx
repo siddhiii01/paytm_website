@@ -9,7 +9,13 @@ import { AddMoneyToWallet } from './components/AddMoneyToWallet';
 const router = createBrowserRouter([
   {
     path: '/',
-
+    element: <Layout />,
+    children: [
+      {
+        path: '/',
+        element: <Home />
+      }
+    ]
   },
   {
     path: '/signup',
