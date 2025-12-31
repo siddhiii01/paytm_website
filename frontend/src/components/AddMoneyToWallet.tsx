@@ -2,6 +2,7 @@ import {useForm} from "react-hook-form";
 import { api } from "../utils/axios";
 import z from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
+import type {JSX} from "react";
 
 const PROVIDERS = ["HDFC", "AXIS", "SBI"] as const;
 
@@ -12,7 +13,7 @@ const moneySchema = z.object({
 
 type Money = z.infer<typeof moneySchema>;
 
-export const AddMoneyToWallet = () => {
+export const AddMoneyToWallet = (): JSX.Element => {
     const {
         register, 
         handleSubmit,
@@ -38,30 +39,43 @@ export const AddMoneyToWallet = () => {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-        <h2>Add Money to PayX Wallet</h2>
-        <input 
-            placeholder="Enter Amount"
-            type="number"
-            {...register("amount", {
-                valueAsNumber: true
-            })}
-        />
-        <label>Select Your Bank</label>
-        <select {...register("provider")}>
-            <option value="HDFC">HDFC</option>
-            <option value="AXIS">AXIS</option>
-            <option value="SBI">SBI</option>
-        </select>
 
+        <div className="p-8 bg-gray-50 flex items-center justify-center">
+            <div className="w-full bg-white shadow-lg rounded-xl p-8 max-w-md">
+                <h2 className="text-2xl font-semibold text-center mb-6">Add Money to PayX Wallet</h2>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5"> 
+                    <div>
+                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
+                        <input 
+                            type="number"
+                            {...register("amount", {
+                                valueAsNumber: true
+                            })}
+                            className="mt-1 w-full px-4 py-2 border rounded-md"
+                        />
 
-        {errors.amount && (<p>{errors.amount.message}</p>)}
-
-        <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adding...": "Add Money to Wallet"}
-        </button>
-
-        </form>
+                        {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message as string}</p>}
+                    </div>
+                    <div>
+                        <label htmlFor="provider" className="block text-sm font-medium text-gray-700">Choose Your Bank</label>
+                        <select {...register("provider")} className="mt-1 w-full px-4 py-2 border rounded-md">
+                            <option value="">-- Select Bank --</option>
+                            <option value="HDFC">HDFC</option>
+                            <option value="AXIS">AXIS</option>
+                            <option value="SBI">SBI</option>
+                        </select>
+                        {errors.provider && <p className="text-red-500 text-sm mt-1">{errors.provider.message as string}</p>}
+                    </div>
+                    <button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+                    >
+                        {isSubmitting ? "Proceed...": "Proceeding"}
+                    </button>
+                </form>
+            </div>
+        </div>
     )
 }
 
