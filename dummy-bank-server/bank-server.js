@@ -123,6 +123,7 @@ app.post('/failure/:token', async (req, res) => {
         console.error("Failed to send webhook:", error.message);
     }
 
+    console.log("Rendiering failed page")
     //showing confirmation to user
     res.render('confirmation', {
         status: "Failed",

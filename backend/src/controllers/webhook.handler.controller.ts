@@ -24,6 +24,10 @@ export class Webhook {
         const { token, userId, amount, status } = parsed.data;
 
         try {
+            let alreadyProcessed = false;
+            let transactionFailed = false;
+
+
             //atomicity  -> either all query should happen or none
             await prisma.$transaction( async (tx) => {
                 //finding the tx
@@ -43,6 +47,7 @@ export class Webhook {
                 //Checking Current Status to Prevent Duplicates
                 if(onRampTx.status === "Success" || onRampTx.status === "Failed"){
                     console.log("Webhook ignored: already processed", token);
+                    alreadyProcessed = true
                     return;
                 }
 
@@ -55,18 +60,25 @@ export class Webhook {
                         }
                     })
                     console.log('Transaction failed');
+                    transactionFailed = true;
                     return;
                 }
 
                 //handling Successs Tx : -> update balance + onramp
-                await tx.balance.update({
+                await tx.balance.upsert({
                     where: {
                         userId: onRampTx.userId
                     },
-                    data: {
+                    update: {
                         amount: {
                             increment: onRampTx.amount
                         }
+                    },
+
+                    create: {
+                        userId: onRampTx.userId,
+                        amount: onRampTx.amount,
+                        locked: 0
                     }
                 });
 
@@ -78,9 +90,18 @@ export class Webhook {
                 });
                 console.log(`Wallet credited: +${onRampTx.amount} for user ${userId}`);
 
-                //transaction has succeeded -> acknowledging the bank
-                return res.status(200).json({ message: "Webhook processed" });
+               
             });
+
+            if (alreadyProcessed) {
+                return res.status(200).json({message: 'Transaction already processed'});
+            }
+            
+            if (transactionFailed) {
+                return res.status(200).json({message: 'Transaction marked as failed'});
+            }
+
+            return res.status(200).json({ message: "Webhook processed successfully" });
 
         } catch(error: any){
             console.error("Webhook error:", error.message);
