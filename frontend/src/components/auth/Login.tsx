@@ -16,7 +16,9 @@ export const Login = (): JSX.Element => {
 
     const [errorMsg, setErrorMsg] = useState<string |null>("");
     const navigate = useNavigate();
+
     const onSubmit = async (data: LoginCredentials) => {
+        setErrorMsg(null);
         try{
             //console.log("Data: ", data)
             const response = await api.post(`/login`, data);
@@ -24,9 +26,34 @@ export const Login = (): JSX.Element => {
             navigate('/dashboard');
 
         } catch(error: unknown){
+            let message = "Something went wrong. Please try again.";
             if(axios.isAxiosError(error)){
-                console.error("Login Page error: ", error)
-                setErrorMsg(error.response?.data || 'Login failed. Try again later');
+
+                //Network error sever unreachable
+                if(!error.response){
+                    message = "Cannot reach server. Check your internet connection.";
+                } else {
+                    const status = error.response.status;
+                    const data = error.response.data;
+
+                    //using backend messages if available
+                    message = data.message || data.error || message;
+                    // Fallback messages based on status code
+                    if (status === 401) {
+                        message = data?.message || "Invalid Crendentials.";
+                    } else if (status === 400) {
+                        message = data?.message || "Please check your input.";
+                    } else if (status === 500) {
+                        message = "Server error. Please try again later.";
+                    } else {
+                        // Non-Axios error (unexpected)
+                        message = "An unexpected error occurred.";
+                        console.error("Unexpected error:", error);
+                    }
+                    console.error("Login Page error: ", error)
+                } 
+                
+                setErrorMsg(message);
             } 
         }
     }
@@ -67,7 +94,7 @@ export const Login = (): JSX.Element => {
                             <div className="w-full">
                                 <label className="block font-medium text-sm text-gray-600">Password</label>
                                 <input 
-                                    
+                                    type="password"
                                     {...register("password")}
                                     className="w-full border-b text-sm border-gray-300 focus:border-blue-500 outline-none py-1"
                                 />
