@@ -58,7 +58,7 @@ export const Signup: React.FC = () => {
                 className="absolute w-full h-full bg-cover bg-center"
                 style={{ backgroundImage: "url('/authbackgrounf.png')" }}
             >
-                <div className="flex items-center justify-center relative z-100 pt-12Updated mb-10">
+                <div className="flex items-center justify-center relative z-100 pt-12 mb-10">
                     <form 
                         onSubmit={handleSubmit(onSubmit)}
                         className="bg-white w-full max-w-[420px] rounded-2xl shadow-lg p-6 space-y-1"

@@ -25,8 +25,7 @@ model User {
 
   // Relationships
   onRampTxns OnRampTx[]
-  balances Balance? //why keep balance as optional -> if no bal set to 0
-  //here i got error when i kept Balance -> prisma error why?
+  balances Balance? 
 
   bills Bills[]
   transactions Transaction[]

@@ -39,14 +39,14 @@ export const Login = (): JSX.Element => {
             >
             <div className="flex items-center justify-center relative z-100 pt-24">
                 <form onSubmit={handleSubmit(onSubmit)} className="bg-white w-full max-w-[420px] rounded-2xl shadow-lg p-6 space-y-1">
-                    <h2 className="text-2xl font-semibold text-center"> 
+                    <h2 className="text-2xl font-semibold text-center mb-4"> 
                         Login with your PayX account
                     </h2>
 
                     {errorMsg && <p className="text-red-500" >{errorMsg}</p>}
 
                     {/* Email */}
-                    <div className="mb-">
+                    <div className="mb-4">
                         <div className="flex items-center gap-4">
                             <img src="/src/assets/user.svg" />
                             <div className="w-full">

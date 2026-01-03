@@ -86,7 +86,9 @@ export class AuthController {
         const {name, email, password, phoneNumber} = validation.data;
         try {
             //check if the user already exist in db thru email 
-            const existingUser = await prisma.user.findUnique({ where: {phoneNumber} });
+            const existingUser = await prisma.user.findFirst({ 
+                where: { OR: [{ email }, { phoneNumber }] } 
+            });
             // user exists -> LOGIN FLOW
             if(existingUser){
                 return res.status(409).json({
@@ -104,13 +106,20 @@ export class AuthController {
                     email, 
                     phoneNumber,
                     name,
-                    password: hashedPassword // Store hashed password
+                    password: hashedPassword, // Store hashed password
+                    balances: {
+                        create: {
+                            amount: 0,
+                            locked: 0
+                        }
+                    }
                 }
             });
             
             //Generate tokens for auto-login
             const tokens = await generateToken(newUser, res)
             console.log("Successful Signup : ", tokens, newUser );
+
             return res.status(201).json({
                 success: true,
                 message: "User created successfully",
@@ -122,6 +131,8 @@ export class AuthController {
                 },
                 data:tokens
             });
+
+           
         }catch(error){
             console.error("Signup error:", error);
             return res.status(500).json({
