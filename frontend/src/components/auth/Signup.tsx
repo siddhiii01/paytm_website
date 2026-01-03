@@ -21,34 +21,51 @@ export const Signup: React.FC = () => {
         reset,
     } = useForm<SignupCredentials>({resolver: zodResolver(registerSchema)});//Whenever the form is validated or submitted, validate it using THIS Zod schema.
     // const [submittedData, setSubmittedData] = useState<SignupCredentials | null>(null);
+    const [serverMessage, setServerMessage] = useState<string | null>(null);
+    const [isSuccess, setIsSuccess] = useState<string | boolean>(false);
     const navigate = useNavigate();
   
-   const [errorMsg, setErrorMsg] = useState<string | null>('');
     //This will ONLY run after form submission, not while typing.
     const onSubmit = async (data:SignupCredentials) => {
-        setErrorMsg('') //clearing the previous error message
+        setIsSuccess(false) //clearing the previous error message
+        setServerMessage(null); // Clear any previous message
         try{
+            
             //HTTP POST request
             //await pauses until server responds
-            const response = await api.post(
-                `/signup`,
-                data, //request body -> Axios Json payload sending back to the backend -> it is an object
-                //data is not JS object it is a Json string 
-                //{withCredentials: true} // VERY IMPORTANT! Allows cookies to be sent/received
-                
-            );
-            console.log("server response:", response.data);
+            const response = await api.post(`/signup`,data);
+            console.log("Signup successful:", response.data);
             // setSubmittedData(data) //to save it to our state
             // console.log("submitted:", data),
-            reset(); // this clears all inputs
-            navigate('/dashboard');
+
+
+            // Show success message
+            setServerMessage("Account created successfully! Redirecting...");
+            setIsSuccess(true);
+            
+            //Small delay so user sees the success message
+            setTimeout(() => {
+                reset(); // Clear form
+                navigate("/dashboard");
+            }, 1500); // 1.5 seconds delay
 
         } catch(error: unknown){
+            let errorMessage = "Something went wrong.";
             if(axios.isAxiosError(error)){
-                console.log(error.response?.data);
-                setErrorMsg(error.response?.data || 'Signup failed. Please try again.');
-                console.error("Signup failed:", error);
-            } 
+                // Trying to extract meaningful message from backend
+                const status = error.response?.status;
+                const data = error.response?.data as any;
+
+                errorMessage =  data.message || 
+                                data.error || 
+                                (status === 409 && "Email or phone number already exists.") ||
+                                (status === 400 && "Invalid details provided.") 
+            } else {
+                errorMessage = "Network error. Check your connection.";
+            }
+            setServerMessage(errorMessage);
+            setIsSuccess(false);
+            console.error("Signup error:", error);
         }
     }
     return (
@@ -71,7 +88,18 @@ export const Signup: React.FC = () => {
                             
                         </div>
                         
-                        {errorMsg && <p className="text-red-500" >{errorMsg}</p>}
+                        {/* Server Message: Success or Error */}
+                        {serverMessage && (
+                            <div
+                                className={`text-center p-3 rounded-lg mb-4 text-sm font-medium ${
+                                    isSuccess
+                                        ? "bg-green-100 text-green-800 border border-green-300"
+                                        : "bg-red-100 text-red-800 border border-red-300"
+                                }`}
+                            >
+                                {serverMessage}
+                            </div>
+                        )}
 
                         {/* Name Field */}
                         <div className="mb-4">

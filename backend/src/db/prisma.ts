@@ -10,8 +10,8 @@ export async function connectDB() {
         console.log("Database connected successfully");
         return true
     }catch(error){
-        console.error("Database connection Failed");
-        return false;
+        console.error("Database connection Failed", error);
+        throw error;
     }
 }
 
