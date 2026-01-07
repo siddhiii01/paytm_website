@@ -7,6 +7,7 @@ import { Login } from './components/auth/Login';
 import { AddMoneyToWallet } from './components/AddMoneyToWallet';
 import { P2P } from './components/P2P';
 import { Dashboard } from './components/Dashboard';
+import { Home } from './components/Home';
 
 const router = createBrowserRouter([
   {
@@ -15,7 +16,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        // element: <Home />
+         element: <Home />
       }
     ]
   },
