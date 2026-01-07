@@ -11,6 +11,7 @@ import { AuthMiddleware } from "@middlewares/auth.middleware.js";
 import { onramptx } from "@controllers/onramp.controller.js";
 import { p2p } from "@controllers/p2p.controller.js";
 import { Webhook } from "@controllers/webhook.handler.controller.js";
+import { getBalance } from "@controllers/getBalance.js";
 
 const app = express();
 
@@ -99,6 +100,8 @@ app.listen(appConfig.port, ()=>{
 
 
 app.post('/p2ptransfer',AuthMiddleware.authenticateUser, p2p.walletTransfer);
+
+app.get('/getBalance',AuthMiddleware.authenticateUser, getBalance)
 
 
 // app.post('/dbupdate', async (req, res) => {

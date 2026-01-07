@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Signup } from './components/auth/Signup';
 import { Login } from './components/auth/Login';
 import { AddMoneyToWallet } from './components/AddMoneyToWallet';
-import { P2P } from './components/P2P';
+import { P2P } from './components/P2PTransfer/P2P';
 import { Dashboard } from './components/Dashboard';
 import { Home } from './components/Home';
 
