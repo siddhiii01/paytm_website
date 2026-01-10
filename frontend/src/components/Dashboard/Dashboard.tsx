@@ -7,9 +7,6 @@ export const Dashboard = (): JSX.Element => {
     return (
        <div>
 
-       
-            
-            
                 <Navbar />
                 {/* THIS GRID CONTROLS THE LAYOUT */}
                 <div className="grid grid-cols-3 gap-6 items-start p-9">
