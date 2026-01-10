@@ -1,10 +1,10 @@
 import type { JSX } from "react";
 import { Link } from "react-router-dom";
-import { Shield, Lock } from "lucide-react";
+import { Copyright } from "lucide-react";
 
 export const Footer = (): JSX.Element => {
     return (
-        <footer className="bg-slate-50 border-t border-gray-100 pt-10 pb-6">
+        <footer className="bg-slate-100 border-t border-gray-200 pt-10 pb-6">
             <div className="mx-auto max-w-7xl px-8">
                 {/* Main content grid with reduced bottom margin */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
@@ -52,9 +52,10 @@ export const Footer = (): JSX.Element => {
                 </div>
 
                 {/* Copyright Bar  */}
-                <div className="border-t border-gray-200 pt-6 text-center">
-                    <p className="text-slate-400 text-[12px]">
-                        © {new Date().getFullYear()} PayX. All rights reserved.
+                <div className="border-t border-gray-200 pt-6 ">
+                    <p className="flex items-center justify-center gap-1 text-slate-400 text-[12px]">
+                        <Copyright size={12} />
+                        {new Date().getFullYear()} PayX. All rights reserved.
                     </p>
                 </div>
             </div>

@@ -3,6 +3,11 @@ import { Navbar } from "../Layout/Navbar"
 
 export const Dashboard = (): JSX.Element => {
     return (
-        <Navbar />
+        <div>
+            <Navbar />
+            <h1>Hello Name</h1>
+            
+        </div>
+        
     )
 }
