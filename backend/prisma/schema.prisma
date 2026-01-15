@@ -35,6 +35,9 @@ model User {
   //P2P Transaction -> separate realtions for sent/received
   sentTransfers P2PTransfer[] @relation("SentTransfers") //all P2P transactions this user sent
   receivedTransfers  P2PTransfer[] @relation("ReceivedTransfers") //all P2P transactions this user received
+
+  sentIntents TransactionIntent[] @relation("SentIntents")
+  recievedIntents TransactionIntent[] @relation("ReciverIntents")
 }
 
 //User's wallet balance
@@ -125,6 +128,39 @@ model TransactionLedger{
   onRampTx OnRampTx? @relation(fields: [onRampTxLedger], references: [id])
 }
 
+
+//i dont want to excute tx right away -> i want to record the intent first
+model TransactionIntent{
+  id Int @id @default(autoincrement()) 
+  //there is always going to be sender and reciever
+  senderId Int
+  sender User @relation("SentIntents", fields: [senderId], references: [id])
+
+  receiverId Int
+  receiver User @relation("ReciverIntents", fields: [receiverId], references: [id])
+
+  amount Int
+  
+  status IntentStatus @default(PENDING) //states for the Intent
+  createdAt DateTime @default(now()) //when was the intent created
+  decidedAt DateTime? //when system is going to approve / blocked
+  exceutedAt DateTime? //when money acutally moved
+
+  decisionReason String?
+  riskScore Int? @default(0)
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum IntentStatus {
+  PENDING
+  APPROVED
+  BLOCKED
+  CONFIRMED
+  EXECUTED
+  FAILED
+}
 // Enums for better type safety
 enum OnRampStatus {
   Processing
