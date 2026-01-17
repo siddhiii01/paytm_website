@@ -5,75 +5,60 @@ import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 import { authConfig } from "@config/auth.config.js";
 import {appConfig} from "@config/app.config.js"
-import { generateToken } from "@utils/jwtToken.js";
-import { hashPassword } from "@utils/password.utils.js";
-import { asyncHanlder } from '../utils/asyncHandler';
+import { generateAccessToken } from "@utils/jwtToken.js";
+import { comparePassword, hashPassword } from "@utils/password.utils.js";
+import { asyncHanlder } from '../utils/asyncHandler.js';
 import { AppError } from "@utils/AppError.js";
 
 
 
 export class AuthController {
-    static login = async (req: Request, res: Response) => {
+    static login = asyncHanlder(async (req: Request, res: Response) => {
         const validation = loginSchema.safeParse(req.body);
         if(!validation.success){
-            return res.status(400).json({
-                success: false,
-                message: "validation failed",
-                errors: validation.error.flatten()
-            })
+            throw new AppError("Zod Validation Failed", 400, validation.error.flatten().fieldErrors)
         }
 
         const {email, password} = validation.data;
-
-        try{
-            //find user from database
-            const user = await prisma.user.findUnique({
-                where: {email},
-                select: {
-                    id: true,
-                    email: true,
-                    phoneNumber: true,
-                    password: true,
-                    name: true
-                }
-            });
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid credentials"
-                });
-            } 
-
-            //compare the given password with the hashed password
-            const isPasswordValid: any = await bcrypt.compare(password, user.password)
-            if(!isPasswordValid){
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid credentials",
-                });
+        //find user & select only necessary field
+        const user = await prisma.user.findUnique({
+            where: {email},
+            select: {
+                id: true,
+                email: true,
+                phoneNumber: true,
+                passwordHash: true,
+                name: true,
+                tokenVersion: true
             }
+        });
+        if (!user) {
+            throw new AppError("Invalid credentials", 401);
+        } 
 
-            //Generate tokens 
-            const tokens = await generateToken({ id: user.id }, res);
-           
-            return res.status(200).json({
-                success: true,
-                message: "Login successful",
-                user: {
+        //compare the given password with the hashed password
+        const isPasswordValid= await comparePassword(password, user.passwordHash)
+        if(!isPasswordValid){
+            throw new AppError("Invalid credentials", 401);
+        }
+
+        //Generate tokens 
+        await generateAccessToken({ 
+            userId: user.id,
+            tokenVersion: user.tokenVersion
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 phoneNumber: user.phoneNumber,
-                },
-            });
-        } catch(error){
-            console.error("Login error: ", error);
-            return res.status(500).json({
-                success: false,
-                message: "Internal server error"
-            });
-        }
-    }
+            },
+        });
+    });
 
     static register = asyncHanlder(async (req: Request, res: Response) => {
         //Validate Input using Zod
@@ -103,6 +88,7 @@ export class AuthController {
                 name,
                 passwordHash: hashedPassword, // Store hashed password
                 createdAt: new Date(),
+                tokenVersion: 0,
                 balances: {
                     create: {
                         amount: 0,
@@ -113,7 +99,7 @@ export class AuthController {
         });
         
         //Generate tokens for auto-login
-        await generateToken(newUser, res);
+        await generateAccessToken({userId: newUser.id, tokenVersion: newUser.tokenVersion});
 
         return res.status(201).json({
             success: true,
