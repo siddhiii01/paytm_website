@@ -27,12 +27,12 @@ const router = createBrowserRouter([
     element: <Dashboard/>
   },
   {
-    path: '/signup',
+    path: '/api/auth/signup',
     element: <Signup/>
   },
   {
   
-    path: '/login',
+    path: '/api/auth/login',
     element: <Login/>
   },
   {

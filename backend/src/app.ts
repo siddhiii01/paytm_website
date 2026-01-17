@@ -14,6 +14,7 @@ import { Webhook } from "@controllers/webhook.handler.controller.js";
 import { getBalance } from "@controllers/getBalance.js";
 import { Dashboard } from "@controllers/dashboard.controllers.js";
 import { errorHandler } from "@utils/errorHandler.js";
+import authRoutes from "@route/auth.route.js";
 
 const app = express();
 
@@ -65,12 +66,9 @@ app.post('/', (req, res) => {
   const username = req.body
   res.send(`${username}`)
 })
-// app.post('/signin', AuthController.signup)
-//signup route
-app.post('/signup', AuthController.register);
 
-//login route
-app.post('/login',AuthController.login);
+//authorization routes
+app.use('/api/auth', authRoutes)
 
 //refresh token
 app.post('/refresh',AuthController.refreshToken);

@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, type JSX } from "react";
 import axios from "axios";
 import { ShieldCheckIcon, Wallet2Icon, WalletIcon } from "lucide-react";
+import {toast} from "react-hot-toast";
 
 
 export const Login = (): JSX.Element => {
@@ -14,17 +15,15 @@ export const Login = (): JSX.Element => {
         handleSubmit,
         formState: {isSubmitting, errors}
     } = useForm<LoginCredentials>({resolver: zodResolver(loginSchema)});
-
-    const [errorMsg, setErrorMsg] = useState<string |null>("");
     const navigate = useNavigate();
 
     const onSubmit = async (data: LoginCredentials) => {
-        setErrorMsg(null);
+      
         try{
             //console.log("Data: ", data)
-            const response = await api.post(`/login`, data);
-            console.log("Login successful:");
-            navigate('/dashboard');
+            const response = await api.post(`/api/auth/login`, data);
+            toast.success("Login successful! Redirecting...")
+            setTimeout(() => navigate('/dashboard'), 1500);
 
         } catch(error: unknown){
             let message = "Something went wrong. Please try again.";
@@ -51,10 +50,12 @@ export const Login = (): JSX.Element => {
                         message = "An unexpected error occurred.";
                         console.error("Unexpected error:", error);
                     }
+                    toast.error(message);
                     console.error("Login Page error: ", error)
                 } 
                 
-                setErrorMsg(message);
+                
+                
             } 
         }
     }
@@ -93,7 +94,6 @@ export const Login = (): JSX.Element => {
 
                     {/* form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6"   >
-                        {errorMsg && <p className="text-red-500" >{errorMsg}</p>}
 
                         {/* Email */}
                         <div className="space-y-2">

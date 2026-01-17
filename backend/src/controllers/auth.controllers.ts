@@ -1,7 +1,6 @@
 import { registerSchema, loginSchema } from "shared_schemas";
-import type {NextFunction, Request, Response} from "express";
+import type {Request, Response} from "express";
 import {prisma} from "@db/prisma.js"
-import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 import { authConfig } from "@config/auth.config.js";
 import {appConfig} from "@config/app.config.js"
@@ -9,8 +8,8 @@ import { generateAccessToken } from "@utils/jwtToken.js";
 import { comparePassword, hashPassword } from "@utils/password.utils.js";
 import { asyncHanlder } from '../utils/asyncHandler.js';
 import { AppError } from "@utils/AppError.js";
-
-
+import { issueToken } from "@utils/issueToken.util.js";
+import { accessCookieOptions, refreshCookieOptions } from "@utils/cookie.util.js";
 
 export class AuthController {
     static login = asyncHanlder(async (req: Request, res: Response) => {
@@ -43,10 +42,18 @@ export class AuthController {
         }
 
         //Generate tokens 
-        await generateAccessToken({ 
+        const {accessToken, refreshToken}=  issueToken({ 
             userId: user.id,
             tokenVersion: user.tokenVersion
         });
+
+        await prisma.user.update({
+            where: {id: user.id},
+            data: {refreshToken}
+        });
+
+        res.cookie("accessToken", accessToken, accessCookieOptions);
+        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
         
         return res.status(200).json({
             success: true,
@@ -98,8 +105,19 @@ export class AuthController {
             }
         });
         
-        //Generate tokens for auto-login
-        await generateAccessToken({userId: newUser.id, tokenVersion: newUser.tokenVersion});
+        //Generate tokens 
+        const {accessToken, refreshToken}=  issueToken({ 
+            userId: newUser.id,
+            tokenVersion: newUser.tokenVersion
+        });
+
+        await prisma.user.update({
+            where: {id: newUser.id},
+            data: {refreshToken}
+        });
+
+        res.cookie("accessToken", accessToken, accessCookieOptions);
+        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
         return res.status(201).json({
             success: true,
