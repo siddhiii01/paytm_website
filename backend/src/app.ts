@@ -102,6 +102,7 @@ app.listen(appConfig.port, ()=>{
 
 
 
+//this create intent -> no longer transfer money
 app.post('/p2ptransfer',AuthMiddleware.authenticateUser, p2p.walletTransfer);
 
 app.get('/getBalance',AuthMiddleware.authenticateUser, getBalance)
