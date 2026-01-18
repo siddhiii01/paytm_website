@@ -5,7 +5,7 @@ import { api } from "../../utils/axios";
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, type JSX } from "react";
 import axios from "axios";
-import { ShieldCheckIcon, Wallet2Icon, WalletIcon } from "lucide-react";
+import { ShieldCheckIcon, WalletIcon } from "lucide-react";
 import {toast} from "react-hot-toast";
 
 
