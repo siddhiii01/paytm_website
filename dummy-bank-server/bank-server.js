@@ -17,9 +17,9 @@ const payments = new Map();  // token → payment object
 // Create PaymentT
 app.post('/create-payment',(req, res) => {
     //redirctUrl -> is the webhook url where the bank will notify the result of payment to paytm
-    const {amount,  redirectUrl, userId, provider} = req.body; //getting from paytm server
-    if(!amount || !redirectUrl){
-        return res.status(400).json({error: "amount and redirectUrl required"})
+    const {amount,  webhookUrl, userReturnUrl, userId, provider} = req.body; //getting from paytm server
+    if(!amount || !webhookUrl || !userReturnUrl){
+        return res.status(400).json({error: "amount, webhookUrl, and userReturnUrl required"})
     }
    // 1. Generate unique token
    const payment_token =crypto.randomBytes(60).toString('hex');
@@ -37,11 +37,12 @@ app.post('/create-payment',(req, res) => {
         userId,
         provider,
         status: "pending",
-        redirectUrl //webhook url paytm gave to send notification here
+        webhookUrl,
+        userReturnUrl 
     });
 
     console.log("Current payments:", Array.from(payments.entries()))
-    console.log('Bank: Created payment', { payment_token, amount, redirectUrl });
+    console.log('Bank: Created payment', { payment_token, amount, webhookUrl });
 
     //returns back to paytm server 
     res.json({
@@ -59,7 +60,7 @@ app.get("/pay/:token", (req,res) => {
         return res.status(404).json({message: "Invalid or expired payment link"})
     }
 
-   res.render('payment', {amount: payment.amount, userId: payment.userId, provider: payment.provider, token, })
+   res.render('payment', {amount: payment.amount /100, userId: payment.userId, provider: payment.provider, token, })
 });
 
 //THIS IS FOR APRROVING THE PAYMENT
@@ -77,7 +78,7 @@ app.post('/success/:token', async (req, res) => {
 
     //calling paytm webhook
     try {
-        const webhookResponse  = await axios.post(payment.redirectUrl, {
+        const webhookResponse  = await axios.post(payment.webhookUrl, {
             token, 
             userId: payment.userId,
             amount: payment.amount,
@@ -89,12 +90,14 @@ app.post('/success/:token', async (req, res) => {
         console.log("Failed to send webhook: ", error.message)
     }
 
+    // Redirect user to PayX status page with params
+    res.redirect(`${payment.userReturnUrl}?token=${token}&status=Success`);
     //showing confirmation page to user
-    res.render('confirmation', {
-        amount: payment.amount,
-        token,
-        status: "Success",
-    }) 
+    // res.render('confirmation', {
+    //     amount: payment.amount,
+    //     token,
+    //     status: "Success",
+    // }) 
 });
 
 //THIS IS FOR DECLINING THE PAYMENT
@@ -125,12 +128,13 @@ app.post('/failure/:token', async (req, res) => {
 
     console.log("Rendiering failed page")
     //showing confirmation to user
-    res.render('confirmation', {
-        status: "Failed",
-        amount: payment.amount,
-        token
-    });
-
+    // res.render('confirmation', {
+    //     status: "Failed",
+    //     amount: payment.amount,
+    //     token
+    // });
+    // Redirect user to PayX status page with params
+    res.redirect(`${payment.userReturnUrl}?token=${token}&status=Failed`);
     
 })
 
