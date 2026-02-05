@@ -9,6 +9,7 @@ import { P2PTransfer } from './components/p2pTransfer/P2PTransfer';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { Home } from './components/Home/Home';
 import {Toaster} from "react-hot-toast"
+import { PaymentStatus } from './components/PaymentStatus';
 
 
 const router = createBrowserRouter([
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
     path: '/p2ptransfer',
     element: <P2PTransfer/>
   }, 
+  {
+    path: "/payment-status",
+    element: <PaymentStatus/>
+  }
 ])
 
 createRoot(document.getElementById('root')!).render(

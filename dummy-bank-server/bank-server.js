@@ -16,6 +16,11 @@ const payments = new Map();  // token → payment object
 
 // Create PaymentT
 app.post('/create-payment',(req, res) => {
+
+    console.log("BANK RECEIVED BODY:", req.body);
+    console.log("BANK HAS userReturnUrl?:", !!req.body.userReturnUrl);
+    console.log("BANK HAS webhookUrl?:", !!req.body.webhookUrl);
+    console.log("BANK HAS redirectUrl?:", !!req.body.redirectUrl);
     //redirctUrl -> is the webhook url where the bank will notify the result of payment to paytm
     const {amount,  webhookUrl, userReturnUrl, userId, provider} = req.body; //getting from paytm server
     if(!amount || !webhookUrl || !userReturnUrl){

@@ -26,12 +26,20 @@ export const onramptx = async (req: Request, res: Response) => {
         // Convert to paise 
         const amountInPaise = amount * 100;
 
+        console.log("Sending to bank:", {
+    amount: amount * 100,
+    userId,
+    provider,
+    webhookUrl: "http://localhost:3000/webhook",
+    userReturnUrl: "http://localhost:5173/payment-status"
+});
+
         //Step 1: Call Dummy Bank API to initiate payment
         const bankResponse = await axios.post('http://localhost:3001/create-payment', {
         amount: amountInPaise, // paise to bank 
         userId,
         provider,
-        redirectUrl: "http://localhost:3000/webhook", // Server-to-server notification
+        webhookUrl: "http://localhost:3000/webhook", // Server-to-server notification
         userReturnUrl: "http://localhost:5173/payment-status", // NEW: User redirect after approve/decline
         });
 
@@ -48,8 +56,7 @@ export const onramptx = async (req: Request, res: Response) => {
                 userId,
                 token: payment_token,
                 status: "Processing",
-                startTime: new Date(new Date().getTime() + (5.5 * 60 * 60 * 100)),
-            }
+            } 
         });
         console.log('Payment saved to db: ',onramp);
 
