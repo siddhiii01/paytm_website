@@ -4,7 +4,7 @@ import z from "zod";
 import { TransactionIntent } from '../utils/transactionIntent.js';
 import { asyncHanlder } from '../utils/asyncHandler.js';
 import { AppError } from "@utils/AppError.js";
-import { evaluteIntent } from "@utils/decision_engine.util.js";
+import { evaluateRisk} from "@utils/decision_engine.util.js";
 
 
 const paymentSchema = z.object({
@@ -80,7 +80,7 @@ export class p2p {
             message: "Transacrion pending approval"
         });
 
-        evaluteIntent(intent.id);
+        evaluateRisk(intent.id);
        
     })
 }
