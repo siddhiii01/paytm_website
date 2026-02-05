@@ -5,15 +5,12 @@ import {z} from "zod";
 export const paymentCallbackSchema = z.object({
     token: z.string().min(1),
     userId: z.number(),
-    amount: z.number().min(1).max(10000),
+    amount: z.number().min(1).max(2000000),// paise: min Rs.1, max Rs.20,000
     status: z.enum(['Success', 'Failed'])
 });
 
 export class Webhook {
     static webhookhanlder = async (req: Request, res: Response) => {
-
-        //received from bank
-        //console.log("received from bank", req.body)
         const parsed = paymentCallbackSchema.safeParse(req.body);
         if(!parsed.success){
             return res.status(400).json({
@@ -22,11 +19,9 @@ export class Webhook {
             });
         }
         const { token, userId, amount, status } = parsed.data;
-
         try {
             let alreadyProcessed = false;
             let transactionFailed = false;
-
 
             //atomicity  -> either all query should happen or none
             await prisma.$transaction( async (tx) => {
@@ -78,13 +73,25 @@ export class Webhook {
                     
                 });
 
+                // Create ledger entry for history
+                await tx.transactionLedger.create({
+                    data: {
+                        userId: onRampTx.userId,
+                        transactionType: "ONRAMP",
+                        direction: "CREDIT",
+                        amount: onRampTx.amount, // paise
+                        onRampTxLedger: onRampTx.id, // link back
+                    },
+                });
+
+                // Update onRampTx
                 await tx.onRampTx.update({
                     where: {token},
                     data: {
                         status: 'Success'
                     }
                 });
-                console.log(`Wallet credited: +${onRampTx.amount} for user ${userId}`);
+                console.log(`Wallet credited: +${onRampTx.amount/100} rupees for user ${userId}`);
 
                
             });

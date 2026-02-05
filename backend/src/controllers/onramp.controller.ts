@@ -6,37 +6,33 @@ import z from "zod";
 const PROVIDERS = ["HDFC", "AXIS", "SBI"] as const;
 
 const moneySchema = z.object({
-    amount : z.number().min(1).max(20000,"Amount cannot exceed ₹20,000"),
+    amount : z.number().min(1).max(20000,"Amount cannot exceed 20,000 Rs."),
     provider: z.enum(PROVIDERS),
 });
 
 export const onramptx = async (req: Request, res: Response) => {
     const parsed = moneySchema.safeParse(req.body); 
-    //console.log("amount frontend sends:", parsed)
     if(!parsed.success){
         return res.status(400).json({errors: parsed.error.flatten()})
     }
-    const {amount, provider} = parsed.data; //Amount:  undefined
-    //console.log("Amount: ", amount)
-
-    if(amount > 20000) { // ₹10,000 in paise
-    return res.status(400).json({
-        message: "Amount cannot exceed ₹20,000"
-    });
-}
-
-    const userId = (req as any).userId //cookies
+    const {amount, provider} = parsed.data;
+  
+    const userId = (req as any).userId //from cookies/middleware
     if(!userId){
         return res.status(401).json({message: "user is not authorised"})
     }
 
     try {
+        // Convert to paise 
+        const amountInPaise = amount * 100;
+
         //Step 1: Call Dummy Bank API to initiate payment
         const bankResponse = await axios.post('http://localhost:3001/create-payment', {
-        amount: amount * 100, // usually in paise 
+        amount: amountInPaise, // paise to bank 
         userId,
         provider,
-        redirectUrl: "http://localhost:3000/webhook" // Bank will call this after payment
+        redirectUrl: "http://localhost:3000/webhook", // Server-to-server notification
+        userReturnUrl: "http://localhost:5173/payment-status", // NEW: User redirect after approve/decline
         });
 
         console.log("Bank Response: ", bankResponse.data);
@@ -47,7 +43,7 @@ export const onramptx = async (req: Request, res: Response) => {
         //or it gets automatically emebed in user according to their ID
         const onramp = await prisma.onRampTx.create({
             data: {
-                amount: amount * 100, //// store in paise to avoid decimals
+                amount: amountInPaise,
                 provider,
                 userId,
                 token: payment_token,
@@ -62,9 +58,6 @@ export const onramptx = async (req: Request, res: Response) => {
             success: true,
             paymentUrl
         });
-
-
-
         //now here i have to make a post req to the frontend so that it happend automatically rght?
     } catch(error: any){
         console.log("Error in Onramp", error.message);
