@@ -11,5 +11,7 @@ export const issueToken = (user: {userId: number, tokenVersion: number}) => {
         tokenVersion: user.tokenVersion
     });
 
+    
+
     return {accessToken, refreshToken}
 }

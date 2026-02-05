@@ -24,7 +24,7 @@ model User {
 
   passwordHash  String 
 
-  tokenVersion Int @default(0)
+  tokenVersion Int @default(0) //To invalidate (cancel) all old tokens at once.
   
   refreshToken String? // Optional, no uniqueness (multiple nulls allowed)
 

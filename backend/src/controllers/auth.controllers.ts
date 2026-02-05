@@ -31,6 +31,8 @@ export class AuthController {
                 tokenVersion: true
             }
         });
+
+        console.log("User Token Version: ", user)
         if (!user) {
             throw new AppError("Invalid credentials", 401);
         } 
@@ -153,58 +155,52 @@ export class AuthController {
     }
     
     //acess token expires fast and refresh token last long -> from this function we will allow or not allow user to get new access token
-    static refreshToken = async (req: Request, res: Response) => {
-        try {
+    static refreshToken = asyncHanlder(async (req: Request, res: Response) => {
 
-            //browser automatically sends cookies
-            const refreshToken = req.cookies.refreshToken;
-            if(!refreshToken){
-                return res.status(401).json({
-                    message: "No refresh token provided"
-                })
-            }
-            //verfiying refresh token
-            let decoded: any;
-            try{
-                decoded = jwt.verify(refreshToken, authConfig.refreshSecret)
-            } catch(error){
-                return res.status(403).json({ message: "Invalid or expired refresh token" });
-            }
+        //browser automatically sends cookies
+        const refreshToken = req.cookies.refreshToken;
+        if(!refreshToken){
+            throw new AppError("No refresh token provided", 401);
+        }
+        //verfiying refresh token
+        let decodedToken: any;
+        try{
+            decodedToken = jwt.verify(refreshToken, authConfig.refreshSecret);
+            console.log("Decoded Token: ", decodedToken)
+        } catch(error){
+            throw new AppError("Invalid or expired refresh token", 403);
 
-            const userId = decoded.userId;
-            //checking if the user exist and refersh token matches
-            const user = await prisma.user.findUnique({
-                where: { id: userId}
-            });
-            if(!user || user.refreshToken != refreshToken){
-                //token mistmatch
+        }
+        const user = await prisma.user.findUnique({
+            where: { id: decodedToken.userId }
+        });
+
+        if (
+            !user ||
+            user.refreshToken !== refreshToken ||
+            user.tokenVersion !== decodedToken.tokenVersion
+            ) {
                 res.clearCookie("refreshToken");
                 res.clearCookie("accessToken");
-                return res.status(403).json({ message: "Invalid refresh token" });
-            }
-
-            //generate new Access Token
-            const newAccessToken = jwt.sign(
-                { userId },
-                authConfig.secret,
-                { expiresIn: authConfig.expiresIn as any }
-            );
-
-            //setting new access token cookie
-            res.cookie("accessToken", newAccessToken, {
-                httpOnly: true,
-                secure: appConfig.nodeEnv === "production",
-                sameSite: "strict",
-                maxAge: 15 * 60 * 1000,
-            });
-
-            return res.status(200).json({ message: "Token refreshed" });
-        
-        } catch(error){
-            console.error("Refresh error:", error);
-            return res.status(500).json({ message: "Internal server error" });
+                throw new AppError("Invalid refresh token", 403);
         }
-    }
+
+        //  generate new access token WITH tokenVersion
+        const newAccessToken = generateAccessToken({
+        userId: user.id,
+        tokenVersion: user.tokenVersion
+        });
+
+        //setting new access token cookie
+        res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: appConfig.nodeEnv === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000,
+        });
+
+        return res.status(200).json({ message: "Token refreshed" });  
+    })
 
     
 }
