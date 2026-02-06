@@ -9,8 +9,8 @@ const PROVIDERS = ["HDFC", "AXIS", "SBI"] as const;
 
 const moneySchema = z.object({
     amount : z.number()
-            .min(1, "Amount must be at least Rs.1")
-            .max(20000, "Amount cannot exceed 20,000rs."),
+            .min(1, "Amount must be at least ₹1")
+            .max(20000, "Amount cannot exceed ₹20,000"),
     provider: z.enum(PROVIDERS),
 });
 
@@ -52,45 +52,89 @@ export const AddMoneyToWallet = (): JSX.Element => {
     }
 
     return (
-        <div className="p-8 bg-gray-50 flex items-center justify-center">
-            <div className="w-full bg-white shadow-lg rounded-xl p-8 max-w-md">
-                <h2 className="text-2xl font-semibold text-center mb-6">Add Money to PayX Wallet</h2>
-                
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5"> 
-                    <div>
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-                        <input 
-                            type="number"
-                            {...register("amount", {
-                                valueAsNumber: true
-                            })}
-                            className="mt-1 w-full px-4 py-2 border rounded-md"
-                        />
-
-                        {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message as string}</p>}
-                    </div>
-                    <div>
-                        <label htmlFor="provider" className="block text-sm font-medium text-gray-700">Choose Your Bank</label>
-                        <select {...register("provider")} className="mt-1 w-full px-4 py-2 border rounded-md">
-                            <option value="">-- Select Bank --</option>
-                            <option value="HDFC">HDFC</option>
-                            <option value="AXIS">AXIS</option>
-                            <option value="SBI">SBI</option>
-                        </select>
-                        {errors.provider && <p className="text-red-500 text-sm mt-1">{errors.provider.message as string}</p>}
-                    </div>
-                    <button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+        <div className="min-h-screen bg-gray-50 p-4">
+            <div className="max-w-2xl mx-auto pt-8">
+                {/* Header */}
+                <div className="mb-8">
+                    {/* <button 
+                        onClick={() => window.history.back()}
+                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-4"
                     >
-                        {isSubmitting ? "Proceed...": "Proceeding"}
-                    </button>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button> */}
+                    <h1 className="text-2xl font-bold text-gray-900">Add Money to Wallet</h1>
+                    <p className="text-sm text-gray-500 mt-1">Add funds from your bank account</p>
+                </div>
 
-                    
-                </form>
+                {/* Form Card */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                        {/* Bank Selection */}
+                        <div>
+                            <label htmlFor="provider" className="block text-sm font-medium text-gray-700 mb-2">
+                                Select Bank
+                            </label>
+                            <select 
+                                {...register("provider")} 
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 bg-white"
+                            >
+                                <option value="">-- Select Your Bank --</option>
+                                <option value="HDFC">HDFC Bank</option>
+                                <option value="AXIS">Axis Bank</option>
+                                <option value="SBI">State Bank of India</option>
+                            </select>
+                            {errors.provider && (
+                                <p className="text-red-600 text-xs mt-2">{errors.provider.message as string}</p>
+                            )}
+                        </div>
+
+                        {/* Amount Input */}
+                        <div>
+                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                                Amount (₹)
+                            </label>
+                            <input 
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                {...register("amount", {
+                                    valueAsNumber: true
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700"
+                            />
+                            {errors.amount && (
+                                <p className="text-red-600 text-xs mt-2">{errors.amount.message as string}</p>
+                            )}
+                        </div>
+
+                        {/* Submit Button */}
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                    Add Money
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     )
 }
-
