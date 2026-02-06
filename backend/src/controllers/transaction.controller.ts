@@ -90,4 +90,91 @@ export class TransactionController {
             },
         });
     });
+
+    /**
+   * GET /api/transaction/latest
+   * Returns the most recent transaction for the authenticated user
+   * Used by /payment-status to show success/failure confirmation
+   */
+  static getLatestUserTransaction = asyncHanlder(async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    if (!userId) {
+      throw new AppError("Unauthorized", 401);
+    }
+
+    // Find the most recent ledger entry for this user
+    const latestLedger = await prisma.transactionLedger.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" }, // newest first
+      select: {
+        id: true,
+        amount: true,
+        direction: true,
+        transactionType: true,
+        createdAt: true,
+        onRampTx: {
+          select: {
+            provider: true,
+            status: true,
+          },
+        },
+        p2pTransfer: {
+          select: {
+            senderId: true,
+            receiverId: true,
+            status: true,
+            sender: { select: { name: true } },
+            receiver: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    if (!latestLedger) {
+      return res.status(200).json({
+        success: true,
+        data: null, // no recent transaction
+      });
+    }
+
+    // Format response
+    let responseData: any = {
+      amount: latestLedger.amount / 100, // paise → rupees
+      date: latestLedger.createdAt.toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+      statusText:
+        latestLedger.onRampTx?.status === "Success" ||
+        latestLedger.p2pTransfer?.status === "COMPLETED"
+          ? "Successful"
+          : "Failed",
+    };
+
+    if (latestLedger.transactionType === "ONRAMP") {
+      responseData = {
+        ...responseData,
+        type: "onramp",
+        method: `Bank • ${latestLedger.onRampTx?.provider || "Unknown"}`,
+      };
+    } else if (latestLedger.transactionType === "P2P_TRANSFER") {
+      const isSent = latestLedger.p2pTransfer?.senderId === userId;
+
+      responseData = {
+        ...responseData,
+        type: "p2p",
+        method: "Wallet Transfer",
+        direction: isSent ? "sent" : "received",
+        counterparty: isSent
+          ? latestLedger.p2pTransfer?.receiver?.name
+          : latestLedger.p2pTransfer?.sender?.name,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: responseData,
+    });
+  });
+
 }

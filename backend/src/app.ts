@@ -107,6 +107,7 @@ app.listen(appConfig.port, ()=>{
 
 
 app.get("/api/transactions", AuthMiddleware.authenticateUser, TransactionController.getUserTransactions);
+app.get("/api/transaction/latest", AuthMiddleware.authenticateUser, TransactionController.getLatestUserTransaction);
 
 
 //this create intent -> no longer transfer money

@@ -26,7 +26,7 @@ export const P2PTransfer= ():JSX.Element => {
         setServerError(null) //always clear the error first 
         try{
             await sendP2PPayment(data)
-            navigate('/dasbhoard');
+            navigate('/payment-status');
         } catch(error:any){
             if (!error.response) {
                 setServerError("Server is unreachable. Please try again later.");
