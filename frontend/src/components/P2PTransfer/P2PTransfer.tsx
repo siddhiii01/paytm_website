@@ -5,9 +5,9 @@ import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { paymentSchema, type Payment } from "shared_schemas";
 import { sendP2PPayment } from './p2pTransfer.api';
-import { BalanceCard } from "../BalanceCard";
+
 import { P2PHeader } from "./P2PHeader";
-import { useBalance } from "../hooks/useBalance";
+
 
 
 export const P2PTransfer= ():JSX.Element => {
@@ -20,17 +20,42 @@ export const P2PTransfer= ():JSX.Element => {
 
     const [serverError, setServerError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const { balance} = useBalance();
+
 
     const onSubmit = async (data: Payment) => {
-        setServerError(null) //always clear the error first 
+        setServerError(null); // always clear the error first
+        console.log('P2P submit started with data:', data); 
         try{
-            await sendP2PPayment(data)
+            console.log('Calling sendP2PPayment...');
+            const response = await sendP2PPayment(data);
+            console.log('sendP2PPayment succeeded:', response);
+            console.log('Navigating to /payment-status NOW');
             navigate('/payment-status');
+            
+            // // Navigate immediately on success
+            // navigate('/payment-status', { 
+            //     replace: true,
+            //     state: { 
+            //         success: true, 
+            //         amount: data.amount,
+            //         phoneNumber: data.phoneNumber,
+            //         transactionId: response?.data?.transactionId
+            //     } 
+            // });
+
+            // Fallback for Playwright/headless timing issues
+    setTimeout(() => {
+      if (window.location.pathname !== '/payment-status') {
+        console.log('React Router navigate did not work - forcing with window.location');
+        window.location.href = '/payment-status';
+      }
+    }, 500); 
         } catch(error:any){
+            console.error('P2P transfer error:', error);
+            
             if (!error.response) {
                 setServerError("Server is unreachable. Please try again later.");
-            } else if (error.response.data?.message) {
+            } else if (error.response?.data?.message) {
                 setServerError(error.response.data.message);
             } else {
                 setServerError("An unexpected error occurred.");
@@ -45,12 +70,12 @@ export const P2PTransfer= ():JSX.Element => {
 
             <main className="mx-auto mt-6 max-w-xl px-4">
                 {/* Balance Card */}
-                {balance && (
+                {/* {balance && (
                     <BalanceCard
                         email={balance.email}
                         amount={balance.amount}
                     />
-                )}
+                )} */}
 
                 {/* Transfer Form Card */}
                 <div className="rounded-l border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:scale-[1.01] hover:shadow-md cursor-default">
@@ -98,8 +123,20 @@ export const P2PTransfer= ():JSX.Element => {
                             disabled={isSubmitting}
                             className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3f3fdb] py-3 text-sm font-bold text-white transition-all hover:bg-[#3232b5] disabled:bg-indigo-300"
                         >
-                            <Send size={16} />
-                            {isSubmitting ? "Sending...": "Send Money"}
+                            {isSubmitting ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Sending...
+                                </>
+                            ) : (
+                                <>
+                                    <Send size={16} />
+                                    Send Money
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>
