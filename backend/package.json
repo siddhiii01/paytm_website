@@ -8,6 +8,11 @@
     "build": "tsc",
     "start": "node dist/app.js"
   },
+  
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
+
   "ts-node": {
     "esm": true,
     "compilerOptions": {
