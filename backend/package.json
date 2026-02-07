@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/app.ts",
-    "build": "tsc",
-    "start": "node dist/app.js"
+    "build": "tsc && prisma generate",                          
+    "start": "prisma generate && node dist/app.js",             
+    "prisma:generate": "prisma generate",                      
+    "migrate:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
