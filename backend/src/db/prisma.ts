@@ -1,7 +1,22 @@
-import {PrismaClient} from "@prisma/client";
+
+import { PrismaClient } from '@prisma/client';
 
 //Create a single sgared PrismaClient instance
-export const prisma = new PrismaClient({});
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+// Reuse existing instance in development (hot reload safety)
+// In production, create new one
+export const prisma =
+  global.prisma ||
+  new PrismaClient({
+    log: ['query', 'info', 'warn', 'error'], // optional: better logging
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = prisma;
+}
 
 //Test Connection function
 export async function connectDB() {
