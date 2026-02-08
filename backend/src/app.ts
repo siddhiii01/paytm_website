@@ -1,4 +1,6 @@
+import 'dotenv/config'
 import express from "express";
+
 import type {Request, Response, NextFunction} from "express";
 import {prisma, connectDB} from "./db/prisma.js"
 import { appConfig } from "@config/app.config.js";
