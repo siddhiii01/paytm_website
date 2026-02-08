@@ -11,26 +11,30 @@ import { Home } from './components/Home/Home';
 import {Toaster} from "react-hot-toast"
 import { PaymentStatus } from './components/PaymentStatus';
 import { Transactions } from './components/Dashboard/Transactions';
-
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Home />
+    element: <Home />,
+    errorElement: <ErrorBoundary />,
      
   },
   {
     path: '/dashboard',
-    element: <Dashboard/>
+    element: <Dashboard/>,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: '/signup',
-    element: <Signup/>
+    element: <Signup/>,
+    errorElement: <ErrorBoundary />,
   },
   {
   
     path: '/login',
-    element: <Login/>
+    element: <Login/>,
+    errorElement: <ErrorBoundary />,
   },
   {
   

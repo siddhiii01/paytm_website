@@ -11,16 +11,11 @@
     "build": "prisma generate && tsc && tsc-alias",
     "start": "node dist/app.js",
     "start:prod": "prisma migrate deploy && node dist/app.js",
-
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-
-    
     "postinstall": "prisma generate"
-    
-  
   },
   "ts-node": {
     "esm": true,
@@ -41,7 +36,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.2.4",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.18.0",
