@@ -3,19 +3,13 @@
   "version": "1.0.0",
   "main": "app.js",
   "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/app.ts",
-    "build": "prisma generate && tsc",
-    "start": "node dist/app.js",
-    "start:prod": "prisma migrate deploy && node dist/app.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "postinstall": "prisma generate"
-  },
   "prisma": {
     "schema": "prisma/schema.prisma"
+  },
+  "scripts": {
+    "dev": "tsx watch src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js"
   },
   "ts-node": {
     "esm": true,
@@ -40,7 +34,6 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.18.0",
-    "prisma": "^7.3.0",
     "shared_schemas": "^1.0.4",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
@@ -53,6 +46,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.16.0",
+    "prisma": "^7.3.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

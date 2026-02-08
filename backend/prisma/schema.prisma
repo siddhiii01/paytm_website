@@ -1,0 +1,170 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  email       String @unique
+  phoneNumber String @unique
+  name        String
+
+  passwordHash String
+
+  tokenVersion Int @default(0)
+
+  refreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  onRampTxns OnRampTx[]
+  balances   Balance?
+
+  //Ledger 
+  ledgerEntries TransactionLedger[]
+
+  //P2P Transaction
+  sentTransfers     P2PTransfer[] @relation("SentTransfers")
+  receivedTransfers P2PTransfer[] @relation("ReceivedTransfers")
+
+  sentIntents     TransactionIntent[] @relation("SentIntents")
+  recievedIntents TransactionIntent[] @relation("ReciverIntents")
+}
+
+model Balance {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  amount Int
+  locked Int
+
+  createdAt   DateTime @default(now())
+  lastUpdated DateTime @updatedAt
+}
+
+model OnRampTx {
+  id    Int    @id @default(autoincrement())
+  token String @unique
+
+  status OnRampStatus @default(Processing)
+
+  amount Int
+
+  provider String
+
+  startTime DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  ledgerEntries TransactionLedger[]
+}
+
+model P2PTransfer {
+  id Int @id @default(autoincrement())
+
+  senderId Int
+  sender   User @relation("SentTransfers", fields: [senderId], references: [id])
+
+  receiverId Int
+  receiver   User @relation("ReceivedTransfers", fields: [receiverId], references: [id])
+
+  amount Int
+
+  status P2PTransferStatus @default(PENDING)
+
+  idempotencyKey String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ledgerEntries TransactionLedger[]
+}
+
+model TransactionLedger {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  transactionType LedgerTransactionType
+
+  direction LedgerDirection
+
+  amount Int
+
+  createdAt DateTime @default(now())
+
+  p2pTransferLedger Int?
+  p2pTransfer       P2PTransfer? @relation(fields: [p2pTransferLedger], references: [id])
+
+  onRampTxLedger Int?
+  onRampTx       OnRampTx? @relation(fields: [onRampTxLedger], references: [id])
+}
+
+model TransactionIntent {
+  id Int @id @default(autoincrement())
+
+  senderId Int
+  sender   User @relation("SentIntents", fields: [senderId], references: [id])
+
+  receiverId Int
+  receiver   User @relation("ReciverIntents", fields: [receiverId], references: [id])
+
+  amount Int
+
+  status     IntentStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  decidedAt  DateTime?
+  exceutedAt DateTime?
+
+  decisionReason String?
+  riskScore      Int?    @default(0)
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum IntentStatus {
+  PENDING
+  APPROVED
+  BLOCKED
+  CONFIRMED
+  EXECUTED
+  FAILED
+}
+
+enum OnRampStatus {
+  Processing
+  Success
+  Failed
+}
+
+enum P2PTransferStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum LedgerTransactionType {
+  P2P_TRANSFER
+  ONRAMP
+}
+
+enum LedgerDirection {
+  DEBIT
+  CREDIT
+}
