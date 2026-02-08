@@ -4,7 +4,7 @@ import { useState, type JSX } from 'react';
 import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { paymentSchema, type Payment } from "shared_schemas";
-import { sendP2PPayment } from './p2pTransfer.api';
+import { sendP2PPayment } from './P2PTransferAPI';
 
 import { P2PHeader } from "./P2PHeader";
 
