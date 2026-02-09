@@ -34,7 +34,7 @@ export const Signup = (): JSX.Element => {
             
             //HTTP POST request
             //await pauses until server responds
-            const response = await api.post(`/api/auth/signup`,data);
+            const response = await api.post(`/api/auth/signup`,data, { withCredentials: true });
             console.log("Signup successful:", response.data);
             // setSubmittedData(data) //to save it to our state
             // console.log("submitted:", data),

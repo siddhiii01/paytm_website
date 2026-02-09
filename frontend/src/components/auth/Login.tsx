@@ -21,7 +21,7 @@ export const Login = (): JSX.Element => {
       
         try{
             //console.log("Data: ", data)
-            await api.post(`/api/auth/login`, data);
+            await api.post(`/api/auth/login`, data, { withCredentials: true });
             toast.success("Login successful! Redirecting...")
             setTimeout(() => navigate('/dashboard'), 1500);
 
