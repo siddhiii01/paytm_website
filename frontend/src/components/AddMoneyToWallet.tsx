@@ -35,6 +35,9 @@ export const AddMoneyToWallet = (): JSX.Element => {
                 toast.success("Redirecting to bank payment...");
                 reset();
                 // slight delay so user sees feedback
+
+                // Debug: log what we're actually redirecting to
+            console.log("Redirecting to:", paymentUrl);
                 setTimeout(() => {
                     window.location.href = paymentUrl;
                 }, 800); 
