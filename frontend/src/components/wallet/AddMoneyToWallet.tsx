@@ -43,7 +43,7 @@ export const AddMoneyToWallet = (): JSX.Element => {
 
             // Make POST request to backend
             // Endpoint: /addtowallet – same as Express route
-            const response = await api.post("/addtowallet", data);
+            const response = await api.post("/api/addtowallet", data);
             const { success, paymentUrl } = response.data;
             if(success && paymentUrl){
                 toast.success("Redirecting to bank...");

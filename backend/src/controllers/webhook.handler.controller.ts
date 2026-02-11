@@ -1,52 +1,76 @@
 import type {Request, Response} from "express";
 import { prisma } from "@db/prisma.js";
 import {z} from "zod";
+import { AppError } from "@utils/AppError.js";
 
+
+// Input schema from dummy bank (matches what bank sends)
 export const paymentCallbackSchema = z.object({
-    token: z.string().min(1),
-    userId: z.number(),
-    amount: z.number().min(1).max(2000000),// paise: min Rs.1, max Rs.20,000
+    token: z.string().min(1, "Token is required"),
+    userId: z.number().int().positive(),
+    amount: z.number().min(1).max(2000000),
     status: z.enum(['Success', 'Failed'])
 });
 
+type PaymentCallback = z.infer<typeof paymentCallbackSchema>;
+
+/**
+ * webhookHandler - Handles asynchronous callbacks from the bank
+ * Called by dummy bank (or real bank) when user approves/declines payment
+ *
+ * Important properties:
+ * - Idempotent: safe to call multiple times (no double-credits)
+ * - Atomic: uses Prisma $transaction to prevent partial updates
+ * - Validates: token, userId, amount match DB record
+ */
+
 export class Webhook {
     static webhookhanlder = async (req: Request, res: Response) => {
+        //Validate incoming payload
         const parsed = paymentCallbackSchema.safeParse(req.body);
         if(!parsed.success){
+            console.warn("Invalid webhook payload:", z.prettifyError(parsed.error));
             return res.status(400).json({
                 message: "Invalid request body",
-                errors: parsed.error.flatten(),
+                errors: z.prettifyError(parsed.error),
             });
         }
         const { token, userId, amount, status } = parsed.data;
+
         try {
             let alreadyProcessed = false;
             let transactionFailed = false;
 
-            //atomicity  -> either all query should happen or none
+            //Atomic transaction – either all succeed or nothing changes
             await prisma.$transaction( async (tx) => {
-                //finding the tx
+                // Find the on-ramp transaction by token
                 const onRampTx = await tx.onRampTx.findUnique({
                     where: {token}
                 });
-                if(!onRampTx){
-                    throw new Error("Transaction not found");
+
+                if (!onRampTx) {
+                    throw new AppError(`Transaction not found for token: ${token}`);
                 }
 
-                //  userId must match
+                // Security: userId must match (prevents token guessing attacks)
                 if (onRampTx.userId !== userId) {
-                    throw new Error("User ID mismatch");
+                    throw new Error("User ID mismatch in webhook");
                 }
 
                 //preventing idempotency (replay attacks) -> if already final state do nothing
                 //Checking Current Status to Prevent Duplicates
                 if(onRampTx.status === "Success" || onRampTx.status === "Failed"){
-                    console.log("Webhook ignored: already processed", token);
+                    console.log(`Webhook ignored (already ${onRampTx.status}): ${token}`);
                     alreadyProcessed = true
                     return;
                 }
 
-                //handling failed tx
+                // Only proceed if still in Processing
+                if (onRampTx.status !== "Processing") {
+                    throw new Error(`Unexpected status: ${onRampTx.status}`);
+                }
+
+                //// Handle failure case
                 if(status === "Failed"){
                     await tx.onRampTx.update({
                         where: {token},
@@ -54,12 +78,12 @@ export class Webhook {
                             status: 'Failed'
                         }
                     })
-                    console.log('Transaction failed');
                     transactionFailed = true;
+                    console.log(`Transaction marked Failed: ${token}`);
                     return;
                 }
 
-                //handling Successs Tx : -> update balance + onramp
+                //handling Successs Tx : -> credit balance + ledger
                 await tx.balance.update({
                     where: {
                         userId: onRampTx.userId
@@ -84,7 +108,7 @@ export class Webhook {
                     },
                 });
 
-                // Update onRampTx
+                // Finalize on-ramp record
                 await tx.onRampTx.update({
                     where: {token},
                     data: {
@@ -96,6 +120,7 @@ export class Webhook {
                
             });
 
+            //Always return 200 to bank (idempotent ACK)
             if (alreadyProcessed) {
                 return res.status(200).json({message: 'Transaction already processed'});
             }
@@ -107,8 +132,15 @@ export class Webhook {
             return res.status(200).json({ message: "Webhook processed successfully" });
 
         } catch(error: any){
-            console.error("Webhook error:", error.message);
-            return res.status(500).json({ message: "Internal error" });
+            console.error("Webhook processing failed:", {
+                token,
+                error: error.message,
+                stack: error.stack?.slice(0, 400),
+            });
+
+            // Still return 200 – most payment providers expect ACK even on error
+            // (they may retry, which is why idempotency is critical)
+            return res.status(200).json({ message: "Webhook received, but processing failed internally" });
         }
 
         

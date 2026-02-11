@@ -20,6 +20,7 @@ import authRoutes from "@route/auth.route.js";
 import balanceRoutes from "@route/balance.route.js";
 import { TransactionController } from "@controllers/transaction.controller.js";
 import { ChartController } from "@controllers/chart.controller.js";
+import onrampRoute from '@route/onramp.route.js';
 
 const app = express();
 
@@ -81,10 +82,11 @@ app.post('/', (req, res) => {
   res.send(`${username}`)
 })
 
-//authorization routes
 app.use('/api/auth', authRoutes);
-
 app.use('/api', AuthMiddleware.authenticateUser, balanceRoutes)
+app.use('/api/addtowallet', onrampRoute)
+
+
 
 //refresh token
 app.post('/refresh',AuthController.refreshToken);
@@ -101,7 +103,7 @@ app.get('/logout',AuthMiddleware.authenticateUser, AuthController.logout, (req, 
 
 //add money to wallet -> recieve a request from frontend
 
-app.post('/addtowallet',AuthMiddleware.authenticateUser, onramptx);
+// app.post('/addtowallet',AuthMiddleware.authenticateUser, onramptx);
 
 
 

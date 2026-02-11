@@ -3,9 +3,9 @@ import { AuthMiddleware } from '@middlewares/auth.middleware.js';
 import { Router } from 'express';
 
 
-const router = Router();
+const onrampRoute = Router();
 
 //AuthMiddleware.authenticateUser,
-router.post('/addtowallet',  onramptx);
+onrampRoute.post('/addtowallet',  onramptx);
 
-export default router;
+export default onrampRoute;
