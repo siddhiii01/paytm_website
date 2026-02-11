@@ -1,4 +1,4 @@
-import { AddMoneyToWallet } from "./components/AddMoneyToWallet";
+import { AddMoneyToWallet } from "./components/wallet/AddMoneyToWallet";
 import { Login } from "./components/auth/Login";
 import { Signup } from "./components/auth/Signup";
 

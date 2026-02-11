@@ -4,7 +4,7 @@ import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Signup } from './components/auth/Signup';
 import { Login } from './components/auth/Login';
-import { AddMoneyToWallet } from './components/AddMoneyToWallet';
+import { AddMoneyToWallet } from './components/wallet/AddMoneyToWallet';
 import { P2PTransfer } from './components/P2P/P2PTransfer';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { Home } from './components/Home/Home';
@@ -38,7 +38,7 @@ const router = createBrowserRouter([
   },
   {
   
-    path: '/addtowallet',
+    path: '/add-money',
     element: <AddMoneyToWallet/>
   },{
     path: '/p2ptransfer',
