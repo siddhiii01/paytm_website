@@ -1,7 +1,6 @@
 import { prisma } from "@db/prisma.js";
 import type {Request, Response} from "express";
 import z from "zod";
-import { TransactionIntent } from '../utils/transactionIntent.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { AppError } from "@utils/AppError.js";
 
@@ -18,7 +17,7 @@ export class p2p {
         //validating input request
         const parsed = paymentSchema.safeParse(req.body);
         if(!parsed.success){
-            throw new AppError("Zod validation failed", 400, parsed.error.flatten().fieldErrors);
+            throw new AppError("Zod validation failed", 400, z.prettifyError(parsed.error));
         }
         const {phoneNumber, amount} = parsed.data;
 
@@ -34,7 +33,7 @@ export class p2p {
             const sender = await tx.user.findUnique({
                 where: { id: senderId },
                 include: {
-                balances: true,
+                    balances: true,
                 },
             });
 
@@ -53,7 +52,10 @@ export class p2p {
             });
 
             if (!receiver) {
-                throw new AppError("Receiver not found", 404);
+                return res.status(404).json({
+                    success: false,
+                    message: "This phone number is not registered with PayX. Ask your friend to sign up first."
+                });
             }
 
             if (sender.id === receiver.id) {
