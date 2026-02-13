@@ -25,8 +25,8 @@ const moneySchema = z.object({
 type OnRampRequestBody = z.infer<typeof moneySchema>;
 
 // Extend Express Request for better typing (instead of (req as any))
-interface AuthRequest extends Request {
-  userId?: number; // from your auth middleware
+interface AuthRequest extends Request<{}, {}, OnRampRequestBody> {
+    userId?: number;
 }
 
 /**
