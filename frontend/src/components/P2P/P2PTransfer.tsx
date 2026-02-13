@@ -3,12 +3,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, type JSX } from 'react';
 import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { paymentSchema, type Payment } from "shared_schemas";
+// import { paymentSchema, type Payment } from "shared_schemas";
 import { sendP2PPayment } from './P2PTransferAPI';
+import {z} from "zod"
 
 import { P2PHeader } from "./P2PHeader";
 
-
+const paymentSchema = z.object({
+    amount: z.number().min(1).max(10000),   // rupees
+    phoneNumber: z.string().min(10).max(10),
+});
+type Payment = z.infer<typeof paymentSchema>;
 
 export const P2PTransfer= ():JSX.Element => {
     const {
