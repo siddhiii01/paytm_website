@@ -38,7 +38,7 @@ const router = createBrowserRouter([
   },
   {
   
-    path: '/add-money',
+    path: '/addtowallet',
     element: <AddMoneyToWallet/>
   },{
     path: '/p2ptransfer',
