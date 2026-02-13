@@ -7,7 +7,7 @@ import { AppError } from "@utils/AppError.js";
 
 
 const paymentSchema = z.object({
-    amount: z.number().min(1).max(10000),
+    amount: z.number().min(100).max(1000000),
     phoneNumber: z.string().trim()
 });
 

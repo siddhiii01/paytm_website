@@ -11,7 +11,7 @@ import { ShieldCheck, Wallet } from "lucide-react";
 
 
 export const Signup = (): JSX.Element => {
-    console.log("🔍 API URL:", import.meta.env.VITE_API_URL); // Add this line
+    //console.log("🔍 API URL:", import.meta.env.VITE_API_URL); // Add this line
     const {
         register, //A function that connects an input field to the form system.
         handleSubmit, //Wraps submit function.
