@@ -22,12 +22,7 @@ const moneySchema = z.object({
     provider: z.enum(PROVIDERS),
 });
 
-type OnRampRequestBody = z.infer<typeof moneySchema>;
 
-// Extend Express Request for better typing (instead of (req as any))
-interface AuthRequest extends Request<{}, {}, OnRampRequestBody> {
-    userId?: number;
-}
 
 /**
  * onramptx - Initiates bank-to-wallet transfer (on-ramping)
@@ -40,7 +35,7 @@ interface AuthRequest extends Request<{}, {}, OnRampRequestBody> {
  * 6. Return payment URL → frontend redirects user to bank approval page
  */
 
-export const onramptx = async (req: AuthRequest, res: Response) => {
+export const onramptx = async (req: Request, res: Response) => {
     //Validate request body with Zod
     const parsed = moneySchema.safeParse(req.body); 
     if(!parsed.success){
