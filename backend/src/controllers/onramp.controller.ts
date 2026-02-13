@@ -9,6 +9,10 @@ const BANK_URL = process.env.BANK_URL
 const WEBHOOK_URL  = process.env.WEBHOOK_URL  
 const FRONTEND_URL = process.env.FRONTEND_URL 
 
+if (!BANK_URL || !WEBHOOK_URL || !FRONTEND_URL) {
+    throw new Error("Missing required env vars: BANK_URL, WEBHOOK_URL, FRONTEND_URL");
+}
+
 const moneySchema = z.object({
     amount : z
         .number()

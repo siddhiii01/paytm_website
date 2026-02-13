@@ -5,9 +5,27 @@ import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const BANK_BASE_URL = process.env.BANK_BASE_URL || 'https://pyx-dummy-bank-server.onrender.com';
-
 dotenv.config();
+
+const BANK_BASE_URL = process.env.BANK_BASE_URL;    // bank's own host
+const WEBHOOK_URL   = process.env.WEBHOOK_URL;      // PayX backend webhook
+const USER_RETURN_URL = process.env.USER_RETURN_URL; // frontend payment-status page
+
+//Fail fast — if any critical URL is missing, crash immediately with a clear message
+// instead of silently sending undefined into axios/redirects
+if (!BANK_BASE_URL || !WEBHOOK_URL || !USER_RETURN_URL) {
+    console.error("Missing required env vars:");
+    if (!BANK_BASE_URL)    console.error("   - BANK_BASE_URL");
+    if (!WEBHOOK_URL)      console.error("   - WEBHOOK_URL");
+    if (!USER_RETURN_URL)  console.error("   - USER_RETURN_URL");
+    process.exit(1);
+}
+
+console.log("Bank server config:", {
+    BANK_BASE_URL,
+    WEBHOOK_URL,
+    USER_RETURN_URL,
+})
 
 const app = express();
 app.use(express.json());
@@ -33,16 +51,11 @@ app.post('/create-payment',(req, res) => {
     }
    // 1. Generate unique token
    const payment_token =crypto.randomBytes(60).toString('hex');
-    // console.log("The random bytes of data generated is: ", token);
-
-    // Debug env loading
-    console.log("BANK_BASE_URL from process.env:", process.env.BANK_BASE_URL);
-    console.log("Using BANK_BASE_URL:", BANK_BASE_URL);  // the const with fallback
 
     // 2. Create the full payment URL (this is where the user will be redirected to approve
     //here the paymentUrl will first go to paytm then it will send to frontend
     //and the frontend will try to redirect the browser to that URL.
-    const paymentUrl = `${process.env.BANK_BASE_URL}/pay/${payment_token}`; //we need to create this here since this is the bank server this will show the Approval Page
+    const paymentUrl = `${BANK_BASE_URL}/pay/${payment_token}`; //we need to create this here since this is the bank server this will show the Approval Page
 
     // 3. Store in Map
     payments.set(payment_token, {
@@ -119,7 +132,7 @@ app.post('/failure/:token', async (req, res) => {
     const {token} = req.params;
     const payment = payments.get(token)
     if(!payment){
-        res.status(400).json({message: "Payment not found"});
+        return res.status(400).json({message: "Payment not found"});
     }
     
     //update the payment to Failed
@@ -128,7 +141,7 @@ app.post('/failure/:token', async (req, res) => {
 
     //calling webhook paytm
     try {
-        const webhookResponse  = await axios.post(payment.redirectUrl, {
+        const webhookResponse  = await axios.post(payment.webhookUrl, {
             token, 
             userId: payment.userId,
             amount: payment.amount,

@@ -8,7 +8,7 @@ import { AppError } from "@utils/AppError.js";
 export const paymentCallbackSchema = z.object({
     token: z.string().min(1, "Token is required"),
     userId: z.number().int().positive(),
-    amount: z.number().min(1).max(2000000),
+    amount: z.number().min(1).max(2100000),
     status: z.enum(['Success', 'Failed'])
 });
 
