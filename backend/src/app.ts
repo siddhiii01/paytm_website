@@ -60,6 +60,10 @@ if(appConfig.nodeEnv === 'development'){
   });
 }
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // async function testConnection(){
 //   const isConnected = await connectDB();
 //   if(!isConnected){
@@ -94,6 +98,8 @@ app.post('/p2ptransfer',AuthMiddleware.authenticateUser, p2p.walletTransfer);
 
 //Webhook (public - called by external service)
 app.post('/webhook', Webhook.webhookhanlder);
+
+
 
 
 //Error Handling

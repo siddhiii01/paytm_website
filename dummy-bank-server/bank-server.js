@@ -165,6 +165,10 @@ app.post('/failure/:token', async (req, res) => {
     
 })
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.listen(3001, () => {
     console.log(`DUMMY BANK SERVER IS LISTENING ON PORT 3001`)
 });
