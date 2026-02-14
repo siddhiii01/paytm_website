@@ -1,11 +1,12 @@
 import { useEffect, useState, type JSX } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation,useNavigate  } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import { api } from "../../utils/axios";
+import toast from "react-hot-toast";
 
 export const Navbar =  (): JSX.Element => {
     const location = useLocation();
-    console.log("location", location);
+    const navigate = useNavigate();
     const isDashboard = location.pathname === "/dashboard"; // Check if the current path is the dashboard
 
     const [name, setName] = useState<string | null>(null);
@@ -27,7 +28,19 @@ export const Navbar =  (): JSX.Element => {
         fetchUser();
     }, [isDashboard]);
     
-    
+    // Logout handler
+    const handleLogout = async () => {
+        try {
+            await api.post("/api/auth/logout");
+            toast.success("Logged out successfully");
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // Even if backend fails, clear and redirect
+            toast.error("Logout failed, redirecting anyway...");
+            navigate("/login");
+        }
+    };
   
 
     return (
@@ -79,7 +92,7 @@ export const Navbar =  (): JSX.Element => {
 
                         <button 
                             className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors font-medium"
-                            onClick={() => {/* Handle Logout Logic */}}
+                            onClick={() => {handleLogout}}
                         >
                             <LogOut size={14} />
                             <span className="text-sm">Logout</span>
