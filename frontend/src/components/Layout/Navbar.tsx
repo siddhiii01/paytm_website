@@ -92,7 +92,7 @@ export const Navbar =  (): JSX.Element => {
 
                         <button 
                             className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors font-medium"
-                            onClick={() => {handleLogout}}
+                            onClick={handleLogout}
                         >
                             <LogOut size={14} />
                             <span className="text-sm">Logout</span>
